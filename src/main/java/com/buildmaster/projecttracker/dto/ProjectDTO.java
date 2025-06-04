@@ -33,4 +33,11 @@ public class ProjectDTO {
             Set<TaskDTO.TaskSummaryResponse> tasks
     ) {}
 
+    public record ProjectSummaryResponse(
+            Long id,
+            String name,
+            LocalDate deadline,
+            ProjectStatus status
+    ) {}
+
 }
