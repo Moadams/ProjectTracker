@@ -11,7 +11,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -40,6 +42,9 @@ public class Developer {
     @Column(name = "skill")
     @Builder.Default
     private Set<String> skills = new HashSet<>();
+
+    @OneToMany(mappedBy = "assignedDevelopers", fetch = FetchType.LAZY)
+    private Set<Task> assignedTasks = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
