@@ -1,5 +1,6 @@
 package com.buildmaster.projecttracker.dto;
 
+import com.buildmaster.projecttracker.enums.TaskStatus;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,5 +20,17 @@ public class TaskDTO {
             LocalDate dueDate,
             @NotNull(message = "Project ID is required")
             Long projectId
+    ) {}
+
+    public record TaskUpdateStatusRequest(
+            @NotNull(message = "Status is required")
+            TaskStatus status
+    ) {}
+
+    public record TaskSummaryResponse(
+            Long id,
+            String title,
+            TaskStatus status,
+            LocalDate dueDate
     ) {}
 }
