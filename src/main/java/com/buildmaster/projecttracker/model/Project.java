@@ -15,7 +15,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name="projects")
@@ -47,7 +49,8 @@ public class Project {
     private ProjectStatus status = ProjectStatus.ACTIVE;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true )
-    private List<Task> tasks = new ArrayList<>();
+    @Builder.Default
+    private Set<Task> tasks = new HashSet<>();
     
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -56,6 +59,7 @@ public class Project {
 
     @LastModifiedDate
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public void addTask(Task task) {
