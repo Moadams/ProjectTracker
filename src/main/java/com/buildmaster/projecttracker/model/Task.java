@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 public class Task {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Task title is required")
@@ -47,6 +48,10 @@ public class Task {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_developer_id")
+    private Developer assignedDeveloper;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
