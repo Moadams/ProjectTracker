@@ -13,8 +13,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,14 @@ public class ProjectService {
         Project savedProject = projectRepository.save(project);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(savedProject);
         return ApiResponse.success("Project created", response);
+    }
+
+    @Transactional
+    public ApiResponse<Page<ProjectDTO.ProjectResponse>> getAllProjects(Pageable pageable) {
+        Page<ProjectDTO.ProjectResponse> response =  projectRepository.findAll(pageable)
+                .map(projectMapper::toProjectResponse);
+        return ApiResponse.success("Project list", response);
+
     }
 
 }
