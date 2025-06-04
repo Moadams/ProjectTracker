@@ -45,7 +45,7 @@ public class Task {
     private LocalDate dueDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
     @CreatedDate
@@ -55,4 +55,9 @@ public class Task {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public boolean isOverdue() {
+        return dueDate.isBefore(LocalDate.now()) &&
+                !TaskStatus.COMPLETED.equals(status);
+    }
 }

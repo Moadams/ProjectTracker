@@ -3,7 +3,6 @@ package com.buildmaster.projecttracker.model;
 import com.buildmaster.projecttracker.enums.ProjectStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
