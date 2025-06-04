@@ -43,7 +43,7 @@ public class Developer {
     @Builder.Default
     private Set<String> skills = new HashSet<>();
 
-    @OneToMany(mappedBy = "assignedDevelopers", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "assignedDeveloper", fetch = FetchType.LAZY)
     private Set<Task> assignedTasks = new HashSet<>();
 
     @CreationTimestamp

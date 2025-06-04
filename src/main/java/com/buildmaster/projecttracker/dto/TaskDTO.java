@@ -35,10 +35,11 @@ public class TaskDTO {
             String description,
             TaskStatus status,
             LocalDate dueDate,
+            boolean overdue,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            ProjectDTO.ProjectSummaryResponse project,
-            Set<DeveloperDTO.DeveloperSummaryResponse> assignedDevelopers
+            DeveloperDTO.DeveloperSummaryResponse assignedDeveloper,
+            ProjectDTO.ProjectSummaryResponse project
     ) {}
 
     public record TaskSummaryResponse(
