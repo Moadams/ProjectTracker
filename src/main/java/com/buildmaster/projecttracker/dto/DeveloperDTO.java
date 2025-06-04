@@ -16,4 +16,10 @@ public class DeveloperDTO {
             String email,
             Set<String> skills
     ) {}
+
+    public record DeveloperSummaryResponse(
+            Long id,
+            String name,
+            String email
+    ) {}
 }
