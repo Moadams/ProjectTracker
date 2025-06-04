@@ -1,11 +1,14 @@
 package com.buildmaster.projecttracker.dto;
 
+import com.buildmaster.projecttracker.enums.ProjectStatus;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 public class ProjectDTO {
     public record ProjectRequest(
@@ -17,6 +20,17 @@ public class ProjectDTO {
             @NotNull(message = "Deadline is required")
             @FutureOrPresent(message = "Deadline must be in the present or future")
             LocalDate deadline
+    ) {}
+
+    public record ProjectResponse(
+            Long id,
+            String name,
+            String description,
+            LocalDate deadline,
+            ProjectStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            Set<TaskDTO.TaskSummaryResponse> tasks
     ) {}
 
 }
