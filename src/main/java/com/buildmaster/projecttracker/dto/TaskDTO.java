@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 public class TaskDTO {
     public record TaskRequest(
@@ -25,6 +27,18 @@ public class TaskDTO {
     public record TaskUpdateStatusRequest(
             @NotNull(message = "Status is required")
             TaskStatus status
+    ) {}
+
+    public record TaskResponse(
+            Long id,
+            String title,
+            String description,
+            TaskStatus status,
+            LocalDate dueDate,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            ProjectDTO.ProjectSummaryResponse project,
+            Set<DeveloperDTO.DeveloperSummaryResponse> assignedDevelopers
     ) {}
 
     public record TaskSummaryResponse(
