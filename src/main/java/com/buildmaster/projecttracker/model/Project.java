@@ -46,6 +46,9 @@ public class Project {
     @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
 
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true )
+    private List<Task> tasks = new ArrayList<>();
+    
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -54,6 +57,14 @@ public class Project {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true )
-    private List<Task> tasks = new ArrayList<>();
+    public void addTask(Task task) {
+        tasks.add(task);
+        task.setProject(this);
+    }
+
+    public void removeTask(Task task){
+        tasks.remove(task);
+        task.setProject(null);
+    }
+    
 }
