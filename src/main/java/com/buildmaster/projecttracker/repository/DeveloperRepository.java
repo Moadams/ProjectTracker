@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface DeveloperRepository extends JpaRepository<Developer, Long> {
     @Override
     Page<Developer> findAll(Pageable pageable);
+
+    boolean existsByEmail(String email);
 }
