@@ -22,7 +22,7 @@ public class DeveloperDTO {
             Long id,
             String name,
             String email,
-            String skills,
+            Set<String> skills,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             Set<TaskDTO.TaskSummaryResponse> assignedTasks
