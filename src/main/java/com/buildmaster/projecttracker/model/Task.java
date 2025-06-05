@@ -55,11 +55,13 @@ public class Task {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @LastModifiedDate
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     public boolean isOverdue() {
         return dueDate.isBefore(LocalDate.now()) &&
