@@ -40,9 +40,15 @@ public class TaskMapper {
 
     public TaskDTO.TaskResponse toTaskDTO(Task task){
 
-        DeveloperDTO.DeveloperSummaryResponse assignedDeveloper = new DeveloperDTO.DeveloperSummaryResponse(
-                1L, "test", "new@gmail.com"
-        );
+        DeveloperDTO.DeveloperSummaryResponse assignedDeveloper = null;
+
+        if(task.getAssignedDeveloper() != null){
+            assignedDeveloper = new DeveloperDTO.DeveloperSummaryResponse(
+                    task.getAssignedDeveloper().getId(),
+                    task.getAssignedDeveloper().getName(),
+                    task.getAssignedDeveloper().getEmail()
+            );
+        }
         ProjectDTO.ProjectSummaryResponse project = new ProjectDTO.ProjectSummaryResponse(
                 task.getProject().getId(),
                 task.getProject().getName(),
