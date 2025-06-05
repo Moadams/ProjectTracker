@@ -31,4 +31,10 @@ public class GlobalExceptionHandler {
         ApiResponse<Map<String, String>> response = ApiResponse.error("Validation failed", errors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleGlobalException(Exception ex, WebRequest request) {
+
+        return new ResponseEntity<>(ApiResponse.error(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
