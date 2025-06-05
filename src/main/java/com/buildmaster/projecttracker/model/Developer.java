@@ -44,11 +44,16 @@ public class Developer {
     private Set<String> skills = new HashSet<>();
 
     @OneToMany(mappedBy = "assignedDeveloper", fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<Task> assignedTasks = new HashSet<>();
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
