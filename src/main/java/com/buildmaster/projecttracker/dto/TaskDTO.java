@@ -21,7 +21,8 @@ public class TaskDTO {
             @FutureOrPresent(message = "Due date must be in the present or future")
             LocalDate dueDate,
             @NotNull(message = "Project ID is required")
-            Long projectId
+            Long projectId,
+            Long assignedDeveloperId
     ) {}
 
     public record TaskUpdateStatusRequest(
