@@ -34,6 +34,7 @@ public class TaskService {
     private final ProjectRepository projectRepository;
     private final DeveloperRepository developerRepository;
     private final TaskMapper taskMapper;
+    private final AuditLogService auditLogService;
 
 
 
@@ -47,7 +48,7 @@ public class TaskService {
         Task task = taskMapper.toTaskEntity(request);
         Task savedTask = taskRepository.save(task);
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(savedTask);
-
+        auditLogService.logAudit(ActionType.CREATE, EntityType.TASK, savedTask.getId().toString(), "system", savedTask);
         return ApiResponse.success("Task created", response);
     }
 
@@ -92,8 +93,8 @@ public class TaskService {
         }
 
         Task updatedTask = taskRepository.save(existingTask);
-
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(updatedTask);
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, updatedTask.getId().toString(), "system", response);
         return ApiResponse.success("Task updated", response);
     }
 
@@ -106,6 +107,7 @@ public class TaskService {
         Task updatedTask = taskRepository.save(existingTask);
 
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(updatedTask);
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, updatedTask.getId().toString(), "system", response);
         return ApiResponse.success("Task status updated", response);
     }
 
@@ -114,7 +116,7 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
         taskRepository.delete(task);
-
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, task.getId().toString(), "system", null);
         return ApiResponse.success("Developer Deleted", null);
     }
 

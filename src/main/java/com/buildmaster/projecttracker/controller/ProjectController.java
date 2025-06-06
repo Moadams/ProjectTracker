@@ -61,5 +61,10 @@ public class ProjectController {
         return ResponseEntity.status(HttpStatus.OK).body(projects);
     }
 
+    @GetMapping("/overdue")
+    public ResponseEntity<ApiResponse<List<ProjectDTO.ProjectResponse>>> getProjectsWithOverdue() {
+        ApiResponse<List<ProjectDTO.ProjectResponse>> overdueProjects = projectService.getOverdueProjects();
+        return ResponseEntity.status(HttpStatus.OK).body(overdueProjects);
+    }
 
 }

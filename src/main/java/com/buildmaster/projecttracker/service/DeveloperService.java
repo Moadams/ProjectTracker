@@ -15,7 +15,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +28,6 @@ public class DeveloperService {
     private final DeveloperRepository developerRepository;
     private final DeveloperMapper developerMapper;
     private final AuditLogService auditLogService;
-    private final ObjectMapper objectMapper;
 
     @Cacheable(value="projects")
     public ApiResponse<Page<DeveloperDTO.DeveloperResponse>> getAllDevelopers(Pageable pageable) {
@@ -42,7 +40,7 @@ public class DeveloperService {
         Developer developer = developerMapper.toDeveloperEntity(request);
         Developer savedDeveloper = developerRepository.save(developer);
         DeveloperDTO.DeveloperResponse response = developerMapper.toDeveloperResponse(savedDeveloper);
-        logAudit(ActionType.CREATE, EntityType.DEVELOPER, savedDeveloper.getId().toString(), "system", savedDeveloper);
+        auditLogService.logAudit(ActionType.CREATE, EntityType.DEVELOPER, savedDeveloper.getId().toString(), "system", savedDeveloper);
         return ApiResponse.success("Developer created", response);
     }
 
@@ -61,6 +59,7 @@ public class DeveloperService {
         developerMapper.updateEntity(developer, request);
         Developer updatedDeveloper = developerRepository.save(developer);
         DeveloperDTO.DeveloperResponse response = developerMapper.toDeveloperResponse(updatedDeveloper);
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.DEVELOPER, updatedDeveloper.getId().toString(), "system", response);
         return ApiResponse.success("Developer updated", response);
     }
 
@@ -68,6 +67,7 @@ public class DeveloperService {
     public ApiResponse<Void> deleteDeveloper(Long id) {
         Developer developer = developerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Developer not found with id: " + id));
         developerRepository.delete(developer);
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.DEVELOPER, developer.getId().toString(), "system", null);
         return ApiResponse.success("Developer deleted", null);
     }
 
@@ -82,12 +82,5 @@ public class DeveloperService {
         return ApiResponse.success("Top 5 developers with most tasks", developers);
     }
 
-    private void logAudit(ActionType actionType, EntityType entityType, String entityId, String actorName, Object entity) {
-        try {
-            String payload = (entity != null) ? objectMapper.writeValueAsString(entity) : null;
-            auditLogService.logAction(actionType, entityType, entityId, actorName, payload);
-        } catch (JsonProcessingException e) {
-            System.err.println("Error converting entity to JSON for audit log: " + e.getMessage());
-        }
-    }
+
 }
