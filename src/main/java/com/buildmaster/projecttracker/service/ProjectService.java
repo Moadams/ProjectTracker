@@ -8,7 +8,9 @@ import com.buildmaster.projecttracker.enums.ProjectStatus;
 import com.buildmaster.projecttracker.exception.ResourceNotFoundException;
 import com.buildmaster.projecttracker.mapper.ProjectMapper;
 import com.buildmaster.projecttracker.model.Project;
+import com.buildmaster.projecttracker.model.Task;
 import com.buildmaster.projecttracker.repository.ProjectRepository;
+import com.buildmaster.projecttracker.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -29,6 +32,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
     private final AuditLogService auditLogService;
+    private final TaskRepository taskRepository;
 
 
     @Transactional
@@ -80,9 +84,20 @@ public class ProjectService {
             @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
     })
     public CustomApiResponse<Void> deleteProject(Long id) {
-        Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
+        Project existingProject = projectRepository.findWithTasksById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
+
+        System.out.println("Task count: " + existingProject.getTasks().size());
+
+        List<Task> projectTasks = taskRepository.findByProjectId(id);
+
+        if (projectTasks != null && !projectTasks.isEmpty()) {
+            projectTasks.forEach(task -> task.setProject(null));
+            projectTasks.forEach(task -> taskRepository.deleteById(task.getId()));
+            existingProject.getTasks().clear();
+        }
+
         projectRepository.delete(existingProject);
-        auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
+        auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", "Deleted project: " + existingProject.getName());
         return CustomApiResponse.success("Project deleted", null);
     }
 

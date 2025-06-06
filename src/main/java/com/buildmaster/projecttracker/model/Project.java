@@ -51,7 +51,7 @@ public class Project {
     @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true )
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY )
     @Builder.Default
     private Set<Task> tasks = new HashSet<>();
     
@@ -66,5 +66,5 @@ public class Project {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
 
-    
+
 }
