@@ -2,19 +2,16 @@ package com.buildmaster.projecttracker.service;
 
 import com.buildmaster.projecttracker.dto.ApiResponse;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
-import com.buildmaster.projecttracker.dto.TaskDTO;
 import com.buildmaster.projecttracker.enums.ProjectStatus;
 import com.buildmaster.projecttracker.exception.ResourceNotFoundException;
 import com.buildmaster.projecttracker.mapper.ProjectMapper;
 import com.buildmaster.projecttracker.model.Project;
 import com.buildmaster.projecttracker.repository.ProjectRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +43,7 @@ public class ProjectService {
     }
 
     @Transactional
+    @Cacheable(value = "allProjects")
     public ApiResponse<Page<ProjectDTO.ProjectResponse>> getAllProjects(Pageable pageable) {
         Page<ProjectDTO.ProjectResponse> response =  projectRepository.findAll(pageable)
                 .map(projectMapper::toProjectResponse);
@@ -62,7 +60,10 @@ public class ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value="projects", key="#id")
+    @Caching(evict = {
+            @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
+            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
+    })
     public ApiResponse<ProjectDTO.ProjectResponse> updateProject(Long id, ProjectDTO.ProjectUpdateRequest projectRequest) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         projectMapper.updateEntity(existingProject, projectRequest);
@@ -73,6 +74,10 @@ public class ProjectService {
 
     @Transactional
     @CacheEvict(value="projects", key="#id")
+    @Caching(evict = {
+            @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
+            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
+    })
     public ApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         projectRepository.delete(existingProject);
@@ -93,6 +98,7 @@ public class ProjectService {
         return ApiResponse.success(responses);
     }
 
+    @Cacheable(value = "projectsWithoutTasks")
     public ApiResponse<List<ProjectDTO.ProjectSummaryResponse>> getProjectsWithoutTasks() {
         List<ProjectDTO.ProjectSummaryResponse> responses = projectRepository.findProjectsWithoutTasks().stream()
                 .map(projectMapper::toProjectSummaryResponse)
