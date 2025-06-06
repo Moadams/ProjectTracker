@@ -6,6 +6,8 @@ import com.buildmaster.projecttracker.enums.EntityType;
 import com.buildmaster.projecttracker.mapper.AuditLogMapper;
 import com.buildmaster.projecttracker.model.AuditLog;
 import com.buildmaster.projecttracker.repository.AuditLogRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final AuditLogMapper auditLogMapper;
+    private final ObjectMapper objectMapper;
 
     @Async
     public void logAction(ActionType actionType, EntityType entityType, String entityId, String actorName, String payload) {
@@ -31,6 +34,16 @@ public class AuditLogService {
                 .payload(payload)
                 .build();
         auditLogRepository.save(auditLog);
+    }
+
+    public void logAudit(ActionType actionType, EntityType entityType, String entityId, String actorName, Object entity) {
+        try {
+            String payload = (entity != null) ? objectMapper.writeValueAsString(entity) : null;
+            logAction(actionType, entityType, entityId, actorName, payload);
+        } catch (JsonProcessingException e) {
+            // Log error or handle appropriately
+            System.err.println("Error converting entity to JSON for audit log: " + e.getMessage());
+        }
     }
 
     public List<AuditLogDTO.AuditLogResponse> getLogsByEntityType(EntityType entityType) {

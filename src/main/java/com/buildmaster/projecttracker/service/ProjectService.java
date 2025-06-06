@@ -2,6 +2,8 @@ package com.buildmaster.projecttracker.service;
 
 import com.buildmaster.projecttracker.dto.ApiResponse;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
+import com.buildmaster.projecttracker.enums.ActionType;
+import com.buildmaster.projecttracker.enums.EntityType;
 import com.buildmaster.projecttracker.enums.ProjectStatus;
 import com.buildmaster.projecttracker.exception.ResourceNotFoundException;
 import com.buildmaster.projecttracker.mapper.ProjectMapper;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
+    private final AuditLogService auditLogService;
 
 
     @Transactional
@@ -39,6 +42,7 @@ public class ProjectService {
         Project project = projectMapper.toProjectEntity(projectRequest);
         Project savedProject = projectRepository.save(project);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(savedProject);
+        auditLogService.logAudit(ActionType.CREATE, EntityType.PROJECT, savedProject.getId().toString(), "system", savedProject);
         return ApiResponse.success("Project created", response);
     }
 
@@ -69,6 +73,7 @@ public class ProjectService {
         projectMapper.updateEntity(existingProject, projectRequest);
         Project updatedProject = projectRepository.save(existingProject);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(updatedProject);
+        auditLogService.logAudit(ActionType.UPDATE, EntityType.PROJECT, updatedProject.getId().toString(), "system", updatedProject);
         return ApiResponse.success("Project updated", response);
     }
 
@@ -81,6 +86,7 @@ public class ProjectService {
     public ApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         projectRepository.delete(existingProject);
+        auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
         return ApiResponse.success("Project deleted", null);
     }
 
