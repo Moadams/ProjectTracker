@@ -9,8 +9,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.Cache;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,6 +24,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@EntityListeners(AuditingEntityListener.class)
 public class Task {
 
     @Id
