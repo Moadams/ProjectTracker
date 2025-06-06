@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,7 @@ public class ProjectController {
                     @ApiResponse(responseCode = "400", description = "Invalid project data")
             })
     @PostMapping
-    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> createProject(@RequestBody ProjectDTO.ProjectRequest projectRequest) {
+    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> createProject(@Valid @RequestBody ProjectDTO.ProjectRequest projectRequest) {
         CustomApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
     }
