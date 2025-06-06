@@ -11,6 +11,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 public class MongoDBConfig {
     @Bean
     public MongoTemplate mongoTemplate() {
-        return new MongoTemplate(MongoClients.create(), "project_tracker");
+        return new MongoTemplate(MongoClients.create(), "auditlogsdb");
     }
 }
