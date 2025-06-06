@@ -25,6 +25,17 @@ public class TaskDTO {
             Long assignedDeveloperId
     ) {}
 
+    public record TaskUpdateRequest(
+            @Size(max = 200, message = "Task title cannot exceed 200 characters")
+            String title,
+            @Size(max = 1000, message = "Task description cannot exceed 1000 characters")
+            String description,
+            @FutureOrPresent(message = "Due date must be in the present or future")
+            LocalDate dueDate,
+            Long projectId,
+            Long assignedDeveloperId
+    ){}
+
     public record TaskUpdateStatusRequest(
             @NotNull(message = "Status is required")
             TaskStatus status
