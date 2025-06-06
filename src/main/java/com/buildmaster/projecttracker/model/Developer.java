@@ -7,13 +7,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.Cache;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -22,6 +23,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Table(name="developers")
 @Builder
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@EntityListeners(AuditingEntityListener.class)
 public class Developer {
 
     @Id
