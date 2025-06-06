@@ -38,6 +38,15 @@ public class TaskMapper {
                 .build();
     }
 
+    public TaskDTO.TaskSummaryResponse toTaskSummaryResponse(Task task){
+        return new TaskDTO.TaskSummaryResponse(
+                task.getId(),
+                task.getTitle(),
+                task.getStatus(),
+                task.getDueDate()
+        );
+    }
+
     public TaskDTO.TaskResponse toTaskDTO(Task task){
 
         DeveloperDTO.DeveloperSummaryResponse assignedDeveloper = null;
