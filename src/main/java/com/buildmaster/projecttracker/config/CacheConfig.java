@@ -15,7 +15,20 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("projects", "tasks", "developers");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("projects",             // For individual project by ID
+                "allProjects",
+                "projectsWithoutTasks",
+
+                "developers",
+                "allDevelopers",
+                "topDevelopers",
+
+                "tasks",
+                "allTasks",
+                "projectTasks",
+                "developerTasks",
+                "overdueTasks",
+                "taskCounts" );
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(1000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
