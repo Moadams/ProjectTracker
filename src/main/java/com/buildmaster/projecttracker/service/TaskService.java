@@ -5,6 +5,7 @@ import com.buildmaster.projecttracker.dto.TaskDTO;
 import com.buildmaster.projecttracker.enums.ActionType;
 import com.buildmaster.projecttracker.enums.EntityType;
 import com.buildmaster.projecttracker.enums.TaskStatus;
+import com.buildmaster.projecttracker.event.TaskAssignedEvent;
 import com.buildmaster.projecttracker.exception.ResourceNotFoundException;
 import com.buildmaster.projecttracker.mapper.TaskMapper;
 import com.buildmaster.projecttracker.model.Developer;
@@ -14,6 +15,7 @@ import com.buildmaster.projecttracker.repository.DeveloperRepository;
 import com.buildmaster.projecttracker.repository.ProjectRepository;
 import com.buildmaster.projecttracker.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class TaskService {
     private final DeveloperRepository developerRepository;
     private final TaskMapper taskMapper;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
 
 
@@ -44,7 +47,10 @@ public class TaskService {
         Task task = taskMapper.toTaskEntity(request);
         Task savedTask = taskRepository.save(task);
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(savedTask);
-        auditLogService.logAudit(ActionType.CREATE, EntityType.TASK, savedTask.getId().toString(), "system", savedTask);
+        auditLogService.logAudit(ActionType.CREATE, EntityType.TASK, savedTask.getId().toString(), "system", response);
+        if(savedTask.getAssignedDeveloper() != null) {
+            applicationEventPublisher.publishEvent(new TaskAssignedEvent(this, savedTask, savedTask.getAssignedDeveloper()));
+        }
         return CustomApiResponse.success("Task created", response);
     }
 
