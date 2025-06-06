@@ -1,9 +1,12 @@
 package com.buildmaster.projecttracker.controller;
 
-import com.buildmaster.projecttracker.dto.ApiResponse;
+import com.buildmaster.projecttracker.dto.CustomApiResponse;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
-import com.buildmaster.projecttracker.model.Project;
 import com.buildmaster.projecttracker.service.ProjectService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,7 @@ import java.util.List;
 @RequestMapping("/api/v1/projects")
 @Validated
 @Slf4j
+@Tag(name = "Project Management", description = "Operations related to projects")
 public class ProjectController {
     private final ProjectService projectService;
 
@@ -25,45 +29,79 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
+    @Operation(summary = "Get all projects with pagination and sorting",
+            parameters = {
+                    @Parameter(name = "page", description = "Page number (0-indexed)", example = "0"),
+                    @Parameter(name = "size", description = "Number of records per page", example = "10"),
+                    @Parameter(name = "sort", description = "Sort order (field,asc/desc)", example = "name,asc")
+            },
+            responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects"))
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProjectDTO.ProjectResponse>>> getAllProjects(Pageable pageable) {
-        ApiResponse<Page<ProjectDTO.ProjectResponse>> projects = projectService.getAllProjects(pageable);
+    public ResponseEntity<CustomApiResponse<Page<ProjectDTO.ProjectResponse>>> getAllProjects(Pageable pageable) {
+        CustomApiResponse<Page<ProjectDTO.ProjectResponse>> projects = projectService.getAllProjects(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(projects);
     }
 
+    @Operation(summary = "Create a new project",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Project created successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid project data")
+            })
     @PostMapping
-    public ResponseEntity<ApiResponse<ProjectDTO.ProjectResponse>> createProject(@RequestBody ProjectDTO.ProjectRequest projectRequest) {
-        ApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
+    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> createProject(@RequestBody ProjectDTO.ProjectRequest projectRequest) {
+        CustomApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
     }
 
+    @Operation(summary = "Get a project by ID",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Project found"),
+                    @ApiResponse(responseCode = "404", description = "Project not found")
+            })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProjectDTO.ProjectResponse>> getProjectById(@PathVariable Long id) {
-        ApiResponse<ProjectDTO.ProjectResponse> project = projectService.getProjectById(id);
+    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> getProjectById(@PathVariable Long id) {
+        CustomApiResponse<ProjectDTO.ProjectResponse> project = projectService.getProjectById(id);
         return ResponseEntity.status(HttpStatus.OK).body(project);
     }
 
+
+    @Operation(summary = "Update an existing project",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Project updated successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid project data"),
+                    @ApiResponse(responseCode = "404", description = "Project not found")
+            })
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProjectDTO.ProjectResponse>> updateProject(@PathVariable Long id, @RequestBody ProjectDTO.ProjectUpdateRequest projectRequest) {
-        ApiResponse<ProjectDTO.ProjectResponse> project = projectService.updateProject(id, projectRequest);
+    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> updateProject(@PathVariable Long id, @RequestBody ProjectDTO.ProjectUpdateRequest projectRequest) {
+        CustomApiResponse<ProjectDTO.ProjectResponse> project = projectService.updateProject(id, projectRequest);
         return ResponseEntity.status(HttpStatus.OK).body(project);
     }
 
+    @Operation(summary = "Delete a project by ID",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Project deleted successfully"),
+                    @ApiResponse(responseCode = "404", description = "Project not found")
+            })
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteProject(@PathVariable Long id) {
-        ApiResponse<Void> project = projectService.deleteProject(id);
-        return ResponseEntity.status(HttpStatus.OK).body(project);
+    public ResponseEntity<CustomApiResponse<Void>> deleteProject(@PathVariable Long id) {
+        CustomApiResponse<Void> project = projectService.deleteProject(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(project);
     }
 
+
+    @Operation(summary = "Get projects without any assigned tasks",
+            responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects without tasks"))
     @GetMapping("/without-tasks")
-    public ResponseEntity<ApiResponse<List<ProjectDTO.ProjectSummaryResponse>>> getProjectsWithoutTasks() {
-        ApiResponse<List<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getProjectsWithoutTasks();
+    public ResponseEntity<CustomApiResponse<List<ProjectDTO.ProjectSummaryResponse>>> getProjectsWithoutTasks() {
+        CustomApiResponse<List<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getProjectsWithoutTasks();
         return ResponseEntity.status(HttpStatus.OK).body(projects);
     }
 
+    @Operation(summary = "Get overdue projects",
+            responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of overdue projects "))
     @GetMapping("/overdue")
-    public ResponseEntity<ApiResponse<List<ProjectDTO.ProjectResponse>>> getProjectsWithOverdue() {
-        ApiResponse<List<ProjectDTO.ProjectResponse>> overdueProjects = projectService.getOverdueProjects();
+    public ResponseEntity<CustomApiResponse<List<ProjectDTO.ProjectResponse>>> getProjectsWithOverdue() {
+        CustomApiResponse<List<ProjectDTO.ProjectResponse>> overdueProjects = projectService.getOverdueProjects();
         return ResponseEntity.status(HttpStatus.OK).body(overdueProjects);
     }
 
