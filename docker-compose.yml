@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+
+
+      SPRING_DATA_MONGODB_HOST: mongo
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: auditlogsdb
+
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/buildmaster
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 5llsmu1
+
+    depends_on:
+      mongodb:
+        condition: service_started
+      postgresql:
+        condition: service_healthy
+
+
+  mongodb:
+    image: mongo:7 # Using MongoDB 7
+    ports:
+      - "27017:27017" # Expose MongoDB port on host (optional, for tools like Compass)
+    volumes:
+      - mongodb_data:/data/db # ADDED: Persist MongoDB data to a named volume
+    environment:
+      MONGO_INITDB_DATABASE: auditlogsdb # Database name
+
+    restart: always
+
+
+  postgresql:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: buildmaster
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 5llsmu1
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d buildmaster"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+volumes:
+  mongodb_data:
+  postgresql_data:
