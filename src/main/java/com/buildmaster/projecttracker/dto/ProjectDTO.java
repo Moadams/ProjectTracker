@@ -22,6 +22,13 @@ public class ProjectDTO {
             LocalDate deadline
     ) {}
 
+    public record ProjectUpdateRequest(
+       String name,
+       String description,
+       LocalDate deadline,
+       ProjectStatus status
+    ){}
+
     public record ProjectResponse(
             Long id,
             String name,

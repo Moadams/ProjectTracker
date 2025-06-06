@@ -41,6 +41,22 @@ public class ProjectMapper {
         );
     }
 
+    public ProjectDTO.ProjectSummaryResponse toProjectSummaryResponse(Project project) {
+        return new ProjectDTO.ProjectSummaryResponse(
+                project.getId(),
+                project.getName(),
+                project.getDeadLine(),
+                project.getStatus()
+        );
+    }
+
+    public void updateEntity(Project project, ProjectDTO.ProjectUpdateRequest request) {
+        if (request.name() != null) project.setName(request.name());
+        if (request.description() != null) project.setDescription(request.description());
+        if (request.deadline() != null) project.setDeadLine(request.deadline());
+        if (request.status() != null) project.setStatus(request.status());
+    }
+
     private TaskDTO.TaskSummaryResponse toTaskSummaryResponse(Task task) {
         return new TaskDTO.TaskSummaryResponse(
                 task.getId(),

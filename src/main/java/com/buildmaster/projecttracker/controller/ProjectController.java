@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/projects")
 @Validated
@@ -34,4 +36,30 @@ public class ProjectController {
         ApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProjectDTO.ProjectResponse>> getProjectById(@PathVariable Long id) {
+        ApiResponse<ProjectDTO.ProjectResponse> project = projectService.getProjectById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(project);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProjectDTO.ProjectResponse>> updateProject(@PathVariable Long id, @RequestBody ProjectDTO.ProjectUpdateRequest projectRequest) {
+        ApiResponse<ProjectDTO.ProjectResponse> project = projectService.updateProject(id, projectRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(project);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteProject(@PathVariable Long id) {
+        ApiResponse<Void> project = projectService.deleteProject(id);
+        return ResponseEntity.status(HttpStatus.OK).body(project);
+    }
+
+    @GetMapping("/without-tasks")
+    public ResponseEntity<ApiResponse<List<ProjectDTO.ProjectSummaryResponse>>> getProjectsWithoutTasks() {
+        ApiResponse<List<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getProjectsWithoutTasks();
+        return ResponseEntity.status(HttpStatus.OK).body(projects);
+    }
+
+
 }
