@@ -1,6 +1,6 @@
 package com.buildmaster.projecttracker.service;
 
-import com.buildmaster.projecttracker.dto.ApiResponse;
+import com.buildmaster.projecttracker.dto.CustomApiResponse;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
 import com.buildmaster.projecttracker.enums.ActionType;
 import com.buildmaster.projecttracker.enums.EntityType;
@@ -15,16 +15,12 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -37,30 +33,30 @@ public class ProjectService {
 
     @Transactional
     @CacheEvict(value = "projects", allEntries = true)
-    public ApiResponse<ProjectDTO.ProjectResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
+    public CustomApiResponse<ProjectDTO.ProjectResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
         log.info("Creating new project: {}", projectRequest);
         Project project = projectMapper.toProjectEntity(projectRequest);
         Project savedProject = projectRepository.save(project);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(savedProject);
         auditLogService.logAudit(ActionType.CREATE, EntityType.PROJECT, savedProject.getId().toString(), "system", savedProject);
-        return ApiResponse.success("Project created", response);
+        return CustomApiResponse.success("Project created", response);
     }
 
     @Transactional
     @Cacheable(value = "allProjects")
-    public ApiResponse<Page<ProjectDTO.ProjectResponse>> getAllProjects(Pageable pageable) {
+    public CustomApiResponse<Page<ProjectDTO.ProjectResponse>> getAllProjects(Pageable pageable) {
         Page<ProjectDTO.ProjectResponse> response =  projectRepository.findAll(pageable)
                 .map(projectMapper::toProjectResponse);
-        return ApiResponse.success("Project list", response);
+        return CustomApiResponse.success("Project list", response);
 
     }
 
 
     @Cacheable(value="projects", key="#id")
-    public ApiResponse<ProjectDTO.ProjectResponse> getProjectById(Long id) {
+    public CustomApiResponse<ProjectDTO.ProjectResponse> getProjectById(Long id) {
         Project project = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(project);
-        return ApiResponse.success("Project details", response);
+        return CustomApiResponse.success("Project details", response);
     }
 
     @Transactional
@@ -68,13 +64,13 @@ public class ProjectService {
             @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
             @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
     })
-    public ApiResponse<ProjectDTO.ProjectResponse> updateProject(Long id, ProjectDTO.ProjectUpdateRequest projectRequest) {
+    public CustomApiResponse<ProjectDTO.ProjectResponse> updateProject(Long id, ProjectDTO.ProjectUpdateRequest projectRequest) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         projectMapper.updateEntity(existingProject, projectRequest);
         Project updatedProject = projectRepository.save(existingProject);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(updatedProject);
         auditLogService.logAudit(ActionType.UPDATE, EntityType.PROJECT, updatedProject.getId().toString(), "system", updatedProject);
-        return ApiResponse.success("Project updated", response);
+        return CustomApiResponse.success("Project updated", response);
     }
 
     @Transactional
@@ -83,15 +79,15 @@ public class ProjectService {
             @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
             @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
     })
-    public ApiResponse<Void> deleteProject(Long id) {
+    public CustomApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
         projectRepository.delete(existingProject);
         auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
-        return ApiResponse.success("Project deleted", null);
+        return CustomApiResponse.success("Project deleted", null);
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<ProjectDTO.ProjectResponse>> getOverdueProjects() {
+    public CustomApiResponse<List<ProjectDTO.ProjectResponse>> getOverdueProjects() {
         log.info("Fetching overdue projects");
 
         List<Project> overdueProjects = projectRepository.findOverdueProjects(
@@ -101,16 +97,16 @@ public class ProjectService {
                 .map(projectMapper::toProjectResponse)
                 .toList();
 
-        return ApiResponse.success(responses);
+        return CustomApiResponse.success(responses);
     }
 
     @Cacheable(value = "projectsWithoutTasks")
-    public ApiResponse<List<ProjectDTO.ProjectSummaryResponse>> getProjectsWithoutTasks() {
+    public CustomApiResponse<List<ProjectDTO.ProjectSummaryResponse>> getProjectsWithoutTasks() {
         List<ProjectDTO.ProjectSummaryResponse> responses = projectRepository.findProjectsWithoutTasks().stream()
                 .map(projectMapper::toProjectSummaryResponse)
                 .toList();
 
-        return ApiResponse.success(responses);
+        return CustomApiResponse.success(responses);
     }
 
 }

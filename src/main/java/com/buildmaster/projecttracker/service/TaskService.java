@@ -1,13 +1,11 @@
 package com.buildmaster.projecttracker.service;
 
-import com.buildmaster.projecttracker.dto.ApiResponse;
-import com.buildmaster.projecttracker.dto.AuditLogDTO;
+import com.buildmaster.projecttracker.dto.CustomApiResponse;
 import com.buildmaster.projecttracker.dto.TaskDTO;
 import com.buildmaster.projecttracker.enums.ActionType;
 import com.buildmaster.projecttracker.enums.EntityType;
 import com.buildmaster.projecttracker.enums.TaskStatus;
 import com.buildmaster.projecttracker.exception.ResourceNotFoundException;
-import com.buildmaster.projecttracker.mapper.AuditLogMapper;
 import com.buildmaster.projecttracker.mapper.TaskMapper;
 import com.buildmaster.projecttracker.model.Developer;
 import com.buildmaster.projecttracker.model.Project;
@@ -15,8 +13,6 @@ import com.buildmaster.projecttracker.model.Task;
 import com.buildmaster.projecttracker.repository.DeveloperRepository;
 import com.buildmaster.projecttracker.repository.ProjectRepository;
 import com.buildmaster.projecttracker.repository.TaskRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,43 +34,43 @@ public class TaskService {
 
 
 
-    public ApiResponse<Page<TaskDTO.TaskResponse>> getAllTasks(Pageable pageable) {
+    public CustomApiResponse<Page<TaskDTO.TaskResponse>> getAllTasks(Pageable pageable) {
         Page<TaskDTO.TaskResponse> response = taskRepository.findAll(pageable).map(taskMapper::toTaskDTO);
-        return ApiResponse.success("Tasks List", response);
+        return CustomApiResponse.success("Tasks List", response);
     }
 
     @Transactional
-    public ApiResponse<TaskDTO.TaskResponse> createTask(TaskDTO.TaskRequest request) {
+    public CustomApiResponse<TaskDTO.TaskResponse> createTask(TaskDTO.TaskRequest request) {
         Task task = taskMapper.toTaskEntity(request);
         Task savedTask = taskRepository.save(task);
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(savedTask);
         auditLogService.logAudit(ActionType.CREATE, EntityType.TASK, savedTask.getId().toString(), "system", savedTask);
-        return ApiResponse.success("Task created", response);
+        return CustomApiResponse.success("Task created", response);
     }
 
-    public ApiResponse<TaskDTO.TaskResponse> getTaskById(Long id) {
+    public CustomApiResponse<TaskDTO.TaskResponse> getTaskById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
         TaskDTO.TaskResponse taskResponse = taskMapper.toTaskDTO(task);
-        return ApiResponse.success("Task details", taskResponse);
+        return CustomApiResponse.success("Task details", taskResponse);
     }
 
-    public ApiResponse<List<TaskDTO.TaskSummaryResponse>> getTasksByProjectId(Long projectId) {
+    public CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> getTasksByProjectId(Long projectId) {
         List<TaskDTO.TaskSummaryResponse> response =  taskRepository.findByProjectId(projectId).stream()
                 .map(taskMapper::toTaskSummaryResponse)
                 .collect(Collectors.toList());
 
-        return ApiResponse.success("Project tasks", response);
+        return CustomApiResponse.success("Project tasks", response);
     }
 
-    public ApiResponse<List<TaskDTO.TaskSummaryResponse>> getTasksByDeveloperId(Long developerId) {
+    public CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> getTasksByDeveloperId(Long developerId) {
         List<TaskDTO.TaskSummaryResponse> response =  taskRepository.findTasksByDeveloperId(developerId).stream()
                 .map(taskMapper::toTaskSummaryResponse)
                 .toList();
-        return ApiResponse.success("Developer tasks", response);
+        return CustomApiResponse.success("Developer tasks", response);
     }
 
-    public ApiResponse<TaskDTO.TaskResponse> updateTask(Long id, TaskDTO.TaskUpdateRequest taskRequest) {
+    public CustomApiResponse<TaskDTO.TaskResponse> updateTask(Long id, TaskDTO.TaskUpdateRequest taskRequest) {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
@@ -95,11 +91,11 @@ public class TaskService {
         Task updatedTask = taskRepository.save(existingTask);
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(updatedTask);
         auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, updatedTask.getId().toString(), "system", response);
-        return ApiResponse.success("Task updated", response);
+        return CustomApiResponse.success("Task updated", response);
     }
 
     @Transactional
-    public ApiResponse<TaskDTO.TaskResponse> updateTaskStatus(Long id, TaskDTO.TaskUpdateStatusRequest statusRequest) {
+    public CustomApiResponse<TaskDTO.TaskResponse> updateTaskStatus(Long id, TaskDTO.TaskUpdateStatusRequest statusRequest) {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
@@ -108,29 +104,29 @@ public class TaskService {
 
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(updatedTask);
         auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, updatedTask.getId().toString(), "system", response);
-        return ApiResponse.success("Task status updated", response);
+        return CustomApiResponse.success("Task status updated", response);
     }
 
     @Transactional
-    public ApiResponse<Void> deleteTask(Long id) {
+    public CustomApiResponse<Void> deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
         taskRepository.delete(task);
         auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, task.getId().toString(), "system", null);
-        return ApiResponse.success("Developer Deleted", null);
+        return CustomApiResponse.success("Developer Deleted", null);
     }
 
-    public ApiResponse<List<TaskDTO.TaskSummaryResponse>> getOverdueTasks() {
+    public CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> getOverdueTasks() {
         List<TaskDTO.TaskSummaryResponse> response = taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), TaskStatus.COMPLETED).stream()
                 .map(taskMapper::toTaskSummaryResponse)
                 .toList();
 
-        return ApiResponse.success("Tasks", response);
+        return CustomApiResponse.success("Tasks", response);
     }
 
-    public ApiResponse<List<Object[]>> getTaskCountsByStatus() {
+    public CustomApiResponse<List<Object[]>> getTaskCountsByStatus() {
         List<Object[]> response = taskRepository.countTasksByStatus();
-        return ApiResponse.success("Tasks", response);
+        return CustomApiResponse.success("Tasks", response);
     }
 
 
