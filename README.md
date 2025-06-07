@@ -66,7 +66,7 @@ spring.datasource.driverClassName=org.postgresql.Driver
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Moadams/ProjectTracker.git
    cd project-tracker
    ```
 
