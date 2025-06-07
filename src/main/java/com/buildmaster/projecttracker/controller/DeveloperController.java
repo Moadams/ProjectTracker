@@ -33,8 +33,8 @@ public class DeveloperController {
             },
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of developers"))
     @GetMapping
-    public ResponseEntity<CustomApiResponse<Page<DeveloperDTO.DeveloperResponse>>> getDevelopers(Pageable pageable) {
-        CustomApiResponse<Page<DeveloperDTO.DeveloperResponse>> developers = developerService.getAllDevelopers(pageable);
+    public ResponseEntity<CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>>> getDevelopers(Pageable pageable) {
+        CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>> developers = developerService.getAllDevelopers(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(developers);
     }
 

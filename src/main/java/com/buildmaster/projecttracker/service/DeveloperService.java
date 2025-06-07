@@ -28,8 +28,8 @@ public class DeveloperService {
     private final AuditLogService auditLogService;
 
     @Cacheable(value="projects")
-    public CustomApiResponse<Page<DeveloperDTO.DeveloperResponse>> getAllDevelopers(Pageable pageable) {
-        Page<DeveloperDTO.DeveloperResponse> response = developerRepository.findAll(pageable).map(developerMapper::toDeveloperResponse);
+    public CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>> getAllDevelopers(Pageable pageable) {
+        Page<DeveloperDTO.DeveloperSummaryResponse> response = developerRepository.findAll(pageable).map(developerMapper::toDeveloperSummaryResponse);
         return CustomApiResponse.success("Developers List", response);
     }
 
