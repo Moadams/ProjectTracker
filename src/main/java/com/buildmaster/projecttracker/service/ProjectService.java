@@ -97,7 +97,7 @@ public class ProjectService {
         }
 
         projectRepository.delete(existingProject);
-        auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", "Deleted project: " + existingProject.getName());
+        auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
         return CustomApiResponse.success("Project deleted", null);
     }
 
