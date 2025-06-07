@@ -3,8 +3,6 @@ package com.buildmaster.projecttracker.mapper;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
 import com.buildmaster.projecttracker.dto.TaskDTO;
 import com.buildmaster.projecttracker.model.Project;
-import com.buildmaster.projecttracker.model.Task;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -57,12 +55,5 @@ public class ProjectMapper {
         if (request.status() != null) project.setStatus(request.status());
     }
 
-    private TaskDTO.TaskSummaryResponse toTaskSummaryResponse(Task task) {
-        return new TaskDTO.TaskSummaryResponse(
-                task.getId(),
-                task.getTitle(),
-                task.getStatus(),
-                task.getDueDate()
-        );
-    }
+
 }

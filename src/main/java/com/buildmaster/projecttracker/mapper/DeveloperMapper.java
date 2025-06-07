@@ -32,6 +32,15 @@ public class DeveloperMapper {
         );
     }
 
+    public DeveloperDTO.DeveloperSummaryResponse toDeveloperSummaryResponse(Developer developer){
+
+        return new DeveloperDTO.DeveloperSummaryResponse(
+                developer.getId(),
+                developer.getName(),
+                developer.getEmail()
+        );
+    }
+
     public void updateEntity(Developer developer, DeveloperDTO.DeveloperRequest request){
         if(request.name() != null) developer.setName(request.name());
         if(request.email() != null) developer.setEmail(request.email());
