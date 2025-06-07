@@ -18,10 +18,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p LEFT JOIN FETCH p.tasks WHERE p.id = :id")
     Optional<Project> findWithTasksById(@Param("id") Long id);
 
-    List<Project> findByStatus(ProjectStatus status);
-
-    List<Project> findByDeadLineBefore(LocalDate date);
-
     @Override
     Page<Project> findAll(Pageable pageable);
 

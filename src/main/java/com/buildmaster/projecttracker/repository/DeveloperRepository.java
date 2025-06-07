@@ -15,10 +15,6 @@ public interface DeveloperRepository extends JpaRepository<Developer, Long> {
     @Override
     Page<Developer> findAll(Pageable pageable);
 
-    boolean existsByEmail(String email);
-
-
-
     @Query(value = "SELECT d.id, d.name, d.email, COUNT(t.id) as task_count \n" +
             "FROM developers d \n" +
             "LEFT JOIN tasks t ON d.id = t.assigned_developer_id \n" +
