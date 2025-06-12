@@ -1,6 +1,8 @@
 package com.buildmaster.projecttracker.repository;
 
 import com.buildmaster.projecttracker.model.Developer;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DeveloperRepository extends JpaRepository<Developer, Long> {
@@ -23,4 +26,6 @@ public interface DeveloperRepository extends JpaRepository<Developer, Long> {
             "LIMIT 5",
             nativeQuery = true)
     List<Object[]> findTop5DevelopersWithMostTasks();
+
+    Optional<Developer> findByEmail(@Email(message = "Enter a valid email address") @NotBlank(message = "Email must not be blank") String email);
 }
