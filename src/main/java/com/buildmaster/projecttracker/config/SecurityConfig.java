@@ -3,6 +3,7 @@ package com.buildmaster.projecttracker.config;
 import com.buildmaster.projecttracker.security.JwtAuthenticationFilter;
 import com.buildmaster.projecttracker.service.CustomOAuth2UserService;
 import com.buildmaster.projecttracker.util.CustomAuthenticationSuccessHandler;
+import com.buildmaster.projecttracker.util.HttpCookieOAuth2AuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Value("${spring.h2.console.enabled}")
     private boolean h2ConsoleEnabled;
@@ -41,33 +43,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for stateless APIs
+
                 .csrf(AbstractHttpConfigurer::disable)
-                // Configure CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Set session management to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Configure request authorization
                 .authorizeHttpRequests(authorize -> {
-                    // Public endpoints
                     authorize.requestMatchers(
                             "/auth/**",
                             "/error"
                     ).permitAll();
 
-                    // Swagger UI (public during development, restricted later)
+
                     authorize.requestMatchers(
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
                             "/swagger-resources/**",
                             "/webjars/**"
-                    ).permitAll();
+                    ).hasRole("ADMIN");
 
-                    // H2 Console (restricted to ADMIN later, for development)
                     if (h2ConsoleEnabled) {
-                        // Use requestMatchers directly with the pattern
                         authorize.requestMatchers("/h2-console/**").permitAll();
-                        // Important: Need to disable frame options for H2 console to work in browser
                         try {
                             http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
                         } catch (Exception e) {
@@ -75,23 +70,23 @@ public class SecurityConfig {
                         }
                     }
 
-                    // Admin-only endpoints
                     authorize.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
 
-                    // All other API requests require authentication
                     authorize.requestMatchers("/api/v1/**").authenticated();
                 })
-                // Configure authentication provider
                 .authenticationProvider(authenticationProvider)
-                // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                // Configure OAuth2 login
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorization -> authorization
+                                .baseUri("/oauth2/authorize")
+                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+                        )
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(customAuthenticationSuccessHandler)
                         .failureHandler((request, response, exception) -> {
+                            httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "OAuth2 login failed: " + exception.getMessage());
                         })
                 );
@@ -99,7 +94,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS Configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

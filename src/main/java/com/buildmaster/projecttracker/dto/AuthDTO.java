@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class UserDTO {
+public class AuthDTO {
     public record RegisterUserRequest(
             @NotBlank(message = "Email is required")
             @Email(message = "Enter a valid email address")
@@ -31,6 +31,7 @@ public class UserDTO {
 
     public record JwtResponse(
             String accessToken,
+            String tokenType,
             String refreshToken,
             Long expiresIn,
             String role
