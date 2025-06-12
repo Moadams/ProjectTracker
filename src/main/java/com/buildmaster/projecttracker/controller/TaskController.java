@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class TaskController {
                     @Parameter(name = "sort", description = "Sort order (field,asc/desc)", example = "dueDate,asc")
             },
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of tasks"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<CustomApiResponse<Page<TaskDTO.TaskResponse>>> getTasks(Pageable pageable) {
         CustomApiResponse<Page<TaskDTO.TaskResponse>> tasks = taskService.getAllTasks(pageable);
@@ -44,6 +46,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "400", description = "Invalid task data"),
                     @ApiResponse(responseCode = "404", description = "Project or Developer not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> createTask(@Valid @RequestBody TaskDTO.TaskRequest request){
         CustomApiResponse<TaskDTO.TaskResponse> createdTask = taskService.createTask(request);
@@ -55,6 +58,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "200", description = "Task found"),
                     @ApiResponse(responseCode = "404", description = "Task not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> getTaskById(@PathVariable Long id) {
         CustomApiResponse<TaskDTO.TaskResponse> task = taskService.getTaskById(id);
@@ -63,6 +67,7 @@ public class TaskController {
 
     @Operation(summary = "Get tasks by Project ID",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved tasks for the project"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/project/{projectId}")
     public ResponseEntity<CustomApiResponse<List<TaskDTO.TaskSummaryResponse>>> getTasksByProjectId(@PathVariable Long projectId) {
         CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> tasks = taskService.getTasksByProjectId(projectId);
@@ -71,6 +76,7 @@ public class TaskController {
 
     @Operation(summary = "Get tasks by Developer ID",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved tasks assigned to the developer"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/developer/{developerId}")
     public ResponseEntity<CustomApiResponse<List<TaskDTO.TaskSummaryResponse>>> getTasksByDeveloperId(@PathVariable Long developerId) {
         CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> tasks = taskService.getTasksByDeveloperId(developerId);
@@ -83,6 +89,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "400", description = "Invalid task data"),
                     @ApiResponse(responseCode = "404", description = "Task, Project, or Developer not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @taskSecurity.isTaskOwner(#id)")
     @PutMapping("/{id}")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> updateTask(@Valid @PathVariable Long id, @Valid @RequestBody TaskDTO.TaskUpdateRequest taskRequest) {
         CustomApiResponse<TaskDTO.TaskResponse> updatedTask = taskService.updateTask(id, taskRequest);
@@ -95,6 +102,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "400", description = "Invalid status data"),
                     @ApiResponse(responseCode = "404", description = "Task not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @taskSecurity.isTaskOwner(#id)")
     @PatchMapping("/{id}/status")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskDTO.TaskUpdateStatusRequest statusRequest) {
         CustomApiResponse<TaskDTO.TaskResponse> updatedTask = taskService.updateTaskStatus(id, statusRequest);
@@ -106,6 +114,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Task not found")
             })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomApiResponse<Void>> deleteTask(@PathVariable Long id) {
         CustomApiResponse<Void> response = taskService.deleteTask(id);
@@ -114,6 +123,7 @@ public class TaskController {
 
     @Operation(summary = "Get all tasks that are overdue",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of overdue tasks"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/overdue")
     public ResponseEntity<CustomApiResponse<List<TaskDTO.TaskSummaryResponse>>> getOverdueTasks() {
         CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> overdueTasks = taskService.getOverdueTasks();
@@ -122,6 +132,7 @@ public class TaskController {
 
     @Operation(summary = "Get task counts grouped by status",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved task counts by status"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/counts-by-status")
     public ResponseEntity<CustomApiResponse<List<Object[]>>> getTaskCountsByStatus() {
         CustomApiResponse<List<Object[]>> counts = taskService.getTaskCountsByStatus();

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class DeveloperController {
                     @Parameter(name = "sort", description = "Sort order (field,asc/desc)", example = "name,asc")
             },
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of developers"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>>> getDevelopers(Pageable pageable) {
         CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>> developers = developerService.getAllDevelopers(pageable);
@@ -43,6 +45,7 @@ public class DeveloperController {
                     @ApiResponse(responseCode = "201", description = "Developer created successfully"),
                     @ApiResponse(responseCode = "400", description = "Invalid developer data")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<CustomApiResponse<DeveloperDTO.DeveloperResponse>> createDeveloper(@Valid @RequestBody DeveloperDTO.DeveloperRequest developerRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(developerService.createDeveloper(developerRequest));
@@ -54,6 +57,7 @@ public class DeveloperController {
                     @ApiResponse(responseCode = "200", description = "Developer found"),
                     @ApiResponse(responseCode = "404", description = "Developer not found")
             })
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<CustomApiResponse<DeveloperDTO.DeveloperResponse>> getDeveloper(@PathVariable Long id) {
         CustomApiResponse<DeveloperDTO.DeveloperResponse> developer = developerService.getDeleveloperById(id);
@@ -66,6 +70,7 @@ public class DeveloperController {
                     @ApiResponse(responseCode = "400", description = "Invalid developer data"),
                     @ApiResponse(responseCode = "404", description = "Developer not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<CustomApiResponse<DeveloperDTO.DeveloperResponse>> updateDeveloper(@PathVariable Long id, @Valid @RequestBody DeveloperDTO.DeveloperRequest developerRequest) {
         CustomApiResponse<DeveloperDTO.DeveloperResponse> developer = developerService.updateDeveloper(id, developerRequest);
@@ -77,6 +82,7 @@ public class DeveloperController {
                     @ApiResponse(responseCode = "204", description = "Developer deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Developer not found")
             })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomApiResponse<Void>> deleteDeveloper(@PathVariable Long id) {
         CustomApiResponse<Void> response = developerService.deleteDeveloper(id);
@@ -85,6 +91,7 @@ public class DeveloperController {
 
     @Operation(summary = "Get top 5 developers with the most tasks assigned",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of top developers"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/top-5-most-tasks")
     public ResponseEntity<CustomApiResponse<List<DeveloperDTO.DeveloperSummaryResponse>>> getTop5DevelopersWithMostTasks() {
         CustomApiResponse<List<DeveloperDTO.DeveloperSummaryResponse>> developers = developerService.getTop5DevelopersWithMostTasks();

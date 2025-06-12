@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,7 @@ public class ProjectController {
                     @Parameter(name = "sort", description = "Sort order (field,asc/desc)", example = "name,asc")
             },
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<CustomApiResponse<Page<ProjectDTO.ProjectResponse>>> getAllProjects(Pageable pageable) {
         CustomApiResponse<Page<ProjectDTO.ProjectResponse>> projects = projectService.getAllProjects(pageable);
@@ -48,6 +50,7 @@ public class ProjectController {
                     @ApiResponse(responseCode = "201", description = "Project created successfully"),
                     @ApiResponse(responseCode = "400", description = "Invalid project data")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> createProject(@Valid @RequestBody ProjectDTO.ProjectRequest projectRequest) {
         CustomApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
@@ -59,6 +62,7 @@ public class ProjectController {
                     @ApiResponse(responseCode = "200", description = "Project found"),
                     @ApiResponse(responseCode = "404", description = "Project not found")
             })
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> getProjectById(@PathVariable Long id) {
         CustomApiResponse<ProjectDTO.ProjectResponse> project = projectService.getProjectById(id);
@@ -72,6 +76,7 @@ public class ProjectController {
                     @ApiResponse(responseCode = "400", description = "Invalid project data"),
                     @ApiResponse(responseCode = "404", description = "Project not found")
             })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> updateProject(@PathVariable Long id, @RequestBody ProjectDTO.ProjectUpdateRequest projectRequest) {
         CustomApiResponse<ProjectDTO.ProjectResponse> project = projectService.updateProject(id, projectRequest);
@@ -83,6 +88,7 @@ public class ProjectController {
                     @ApiResponse(responseCode = "204", description = "Project deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Project not found")
             })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomApiResponse<Void>> deleteProject(@PathVariable Long id) {
         CustomApiResponse<Void> project = projectService.deleteProject(id);
@@ -92,6 +98,7 @@ public class ProjectController {
 
     @Operation(summary = "Get projects without any assigned tasks",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects without tasks"))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/without-tasks")
     public ResponseEntity<CustomApiResponse<List<ProjectDTO.ProjectSummaryResponse>>> getProjectsWithoutTasks() {
         CustomApiResponse<List<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getProjectsWithoutTasks();
@@ -100,6 +107,7 @@ public class ProjectController {
 
     @Operation(summary = "Get overdue projects",
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of overdue projects "))
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/overdue")
     public ResponseEntity<CustomApiResponse<List<ProjectDTO.ProjectResponse>>> getProjectsWithOverdue() {
         CustomApiResponse<List<ProjectDTO.ProjectResponse>> overdueProjects = projectService.getOverdueProjects();
