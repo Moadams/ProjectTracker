@@ -58,7 +58,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "200", description = "Task found"),
                     @ApiResponse(responseCode = "404", description = "Task not found")
             })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @taskSecurity.isTaskOwner(#id)")
     @GetMapping("/{id}")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> getTaskById(@PathVariable Long id) {
         CustomApiResponse<TaskDTO.TaskResponse> task = taskService.getTaskById(id);
