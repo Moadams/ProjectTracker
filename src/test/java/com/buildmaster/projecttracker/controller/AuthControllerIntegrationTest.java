@@ -4,7 +4,7 @@ import com.buildmaster.projecttracker.dto.AuthDTO;
 import com.buildmaster.projecttracker.enums.RoleName;
 import com.buildmaster.projecttracker.model.Role;
 import com.buildmaster.projecttracker.model.User;
-import com.buildmaster.projecttracker.repository.DeveloperRepository; // Used for setup
+import com.buildmaster.projecttracker.repository.DeveloperRepository;
 import com.buildmaster.projecttracker.repository.RoleRepository;
 import com.buildmaster.projecttracker.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional; // For rolling back tests
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -71,7 +71,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isCreated());
 
 
-        // Verify user created in DB
+
         User registeredUser = userRepository.findByEmail("newuser@example.com").orElse(null);
         assertThat(registeredUser).isNotNull();
         assertThat(passwordEncoder.matches("securepassword", registeredUser.getPassword())).isTrue();
@@ -83,7 +83,7 @@ class AuthControllerIntegrationTest {
     @Test
     @DisplayName("Should return BAD_REQUEST if email already exists during registration")
     void registerUser_shouldReturnBadRequestForExistingEmail() throws Exception {
-        // Register a user first
+
         AuthDTO.RegisterUserRequest registerRequest = new AuthDTO.RegisterUserRequest(
                 "existing@example.com", "password");
         userRepository.save(User.builder()
@@ -94,7 +94,7 @@ class AuthControllerIntegrationTest {
                 .updatedAt(LocalDateTime.now())
                 .build());
 
-        // Try to register again with the same email
+
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
@@ -105,7 +105,7 @@ class AuthControllerIntegrationTest {
     @Test
     @DisplayName("Should login user and return JWT token")
     void authenticateUser_shouldLoginAndReturnJwt() throws Exception {
-        // Register a user for login
+
         AuthDTO.RegisterUserRequest registerRequest = new AuthDTO.RegisterUserRequest(
                 "loginuser@example.com", "loginpassword");
         userRepository.save(User.builder()
@@ -134,7 +134,7 @@ class AuthControllerIntegrationTest {
     @Test
     @DisplayName("Should return UNAUTHORIZED for invalid login credentials")
     void authenticateUser_shouldReturnUnauthorizedForInvalidCredentials() throws Exception {
-        // Attempt to login with non-existent user
+
         AuthDTO.LoginUserRequest loginRequest = new AuthDTO.LoginUserRequest(
                 "nonexistent@example.com", "wrongpassword");
 
