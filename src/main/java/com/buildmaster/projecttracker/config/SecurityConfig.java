@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -74,7 +75,10 @@ public class SecurityConfig {
 
                     authorize.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
 
-                    authorize.requestMatchers("/api/v1/**").authenticated();
+                    authorize.requestMatchers("/api/v1/projects/**").authenticated();
+                    authorize.requestMatchers("/api/v1/tasks/**").hasAnyRole("ADMIN","DEVELOPER", "MANAGER");
+                    authorize.requestMatchers("/api/v1/developers/**").hasAnyRole("ADMIN","DEVELOPER","MANAGER");
+                    authorize.requestMatchers("/api/v1/notifications/**").authenticated();
                 })
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
