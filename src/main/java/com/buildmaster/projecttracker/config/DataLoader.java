@@ -20,7 +20,8 @@ public class DataLoader implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final String adminEmail = "admin@buildmater.com";
+    private final String adminEmail = "admin@buildmaster.com";
+    private final String managerEmail = "manager@buildmaster.com";
 
     @Override
     public void run(String... args) throws Exception {
@@ -41,6 +42,15 @@ public class DataLoader implements CommandLineRunner {
             User adminUser = User.builder().email(adminEmail).password(passwordEncoder.encode("adminpassword123")).roles(Collections.singleton(adminRole)).build();
             userRepository.save(adminUser);
             System.out.println("Created admin user: " + adminEmail);
+        }
+
+        if(userRepository.findByEmail(managerEmail).isEmpty()) {
+
+            System.out.println("Creating manager account");
+            Role managerRole = roleRepository.findByName(RoleName.ROLE_MANAGER).orElseGet( () -> roleRepository.save(Role.builder().name(RoleName.ROLE_MANAGER).build()));
+            User managerUser = User.builder().email(managerEmail).password(passwordEncoder.encode("managerpassword123")).roles(Collections.singleton(managerRole)).build();
+            userRepository.save(managerUser);
+            System.out.println("Created manager user: " + managerEmail);
         }
     }
 }
