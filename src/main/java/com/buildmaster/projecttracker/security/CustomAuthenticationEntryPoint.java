@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationEntryPoint.class);
-    private final ObjectMapper objectMapper; // To convert ErrorDetails to JSON
+    private final ObjectMapper objectMapper;
 
     /**
      * Commences an authentication scheme. This method is called when an unauthenticated

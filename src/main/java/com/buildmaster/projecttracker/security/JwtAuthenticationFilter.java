@@ -67,7 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         }catch (ExpiredJwtException ex) {
-
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Authentication Failed: Your session has expired. Please log in again.");
         } catch (UnsupportedJwtException ex) {
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Authentication Failed: Unsupported token.");
