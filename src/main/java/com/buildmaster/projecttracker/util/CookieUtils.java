@@ -24,8 +24,8 @@ public class CookieUtils {
 
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/"); // Important: Make cookie available across the whole application
-        cookie.setHttpOnly(true); // Prevent client-side script access
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
         cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
     }
@@ -35,9 +35,9 @@ public class CookieUtils {
         if (cookies != null && cookies.length > 0) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(name)) {
-                    cookie.setValue(""); // Clear value
-                    cookie.setPath("/"); // Must match the path used when adding
-                    cookie.setMaxAge(0); // Immediately expire
+                    cookie.setValue("");
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
                     response.addCookie(cookie);
                 }
             }

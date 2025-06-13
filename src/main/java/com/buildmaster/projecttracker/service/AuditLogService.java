@@ -41,7 +41,7 @@ public class AuditLogService {
             String payload = (entity != null) ? objectMapper.writeValueAsString(entity) : null;
             logAction(actionType, entityType, entityId, actorName, payload);
         } catch (JsonProcessingException e) {
-            // Log error or handle appropriately
+
             System.err.println("Error converting entity to JSON for audit log: " + e.getMessage());
         }
     }

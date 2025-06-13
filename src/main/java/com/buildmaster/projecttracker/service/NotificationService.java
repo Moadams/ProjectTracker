@@ -50,7 +50,7 @@ public class NotificationService {
                 .entityId(entityId)
                 .entityType(entityType)
                 .timestamp(LocalDateTime.now())
-                .read(false) // New notifications are unread by default
+                .read(false)
                 .build();
         Notification savedNotification = notificationRepository.save(notification);
         logger.info("Created notification for {}: {}", recipientEmail, message);

@@ -39,12 +39,12 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Use ReflectionTestUtils to inject @Value fields into the JwtService instance
+
         ReflectionTestUtils.setField(jwtService, "secretKey", TEST_SECRET_KEY);
         ReflectionTestUtils.setField(jwtService, "jwtExpiration", TEST_EXPIRATION);
         ReflectionTestUtils.setField(jwtService, "refreshExpiration", TEST_REFRESH_EXPIRATION);
 
-        // Create a mock UserDetails object for testing
+
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_DEVELOPER"));
         userDetails = new User("test@example.com", "password", authorities);
     }

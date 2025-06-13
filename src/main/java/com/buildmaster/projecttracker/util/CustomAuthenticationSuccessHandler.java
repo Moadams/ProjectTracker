@@ -13,14 +13,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService; // Still needed for local login context, but not for re-loading OAuth2 user
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Optional; // Keep Optional import
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor

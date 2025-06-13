@@ -15,7 +15,7 @@ public class AuditLogDTO {
             String entityId,
             LocalDateTime timestamp,
             String actorName,
-            String payload // JSON string
+            String payload
     ) {}
 
     public record AuditTaskInfo(

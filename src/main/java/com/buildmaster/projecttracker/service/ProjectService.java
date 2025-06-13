@@ -65,8 +65,8 @@ public class ProjectService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
-            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
+            @CacheEvict(value = "projects", key = "#id"),
+            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true)
     })
     public CustomApiResponse<ProjectDTO.ProjectResponse> updateProject(Long id, ProjectDTO.ProjectUpdateRequest projectRequest) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
@@ -80,8 +80,8 @@ public class ProjectService {
     @Transactional
     @CacheEvict(value="projects", key="#id")
     @Caching(evict = {
-            @CacheEvict(value = "projects", key = "#id"), // Evict specific project cache
-            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true) // Evict relevant lists
+            @CacheEvict(value = "projects", key = "#id"),
+            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true)
     })
     public CustomApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findWithTasksById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));

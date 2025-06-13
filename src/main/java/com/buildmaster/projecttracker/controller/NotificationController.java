@@ -19,28 +19,28 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    @Operation(summary = "Get all notifications for the authenticated user (most recent first)", security = @SecurityRequirement(name = "bearerAuth")) // CORRECTED
+    @Operation(summary = "Get all notifications for the authenticated user (most recent first)", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping
     public ResponseEntity<List<Notification>> getAllNotificationsForCurrentUser() {
         List<Notification> notifications = notificationService.getNotificationsForUser();
         return ResponseEntity.ok(notifications);
     }
 
-    @Operation(summary = "Get unread notifications for the authenticated user (most recent first)", security = @SecurityRequirement(name = "bearerAuth")) // CORRECTED
+    @Operation(summary = "Get unread notifications for the authenticated user (most recent first)", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/unread")
     public ResponseEntity<List<Notification>> getUnreadNotificationsForCurrentUser() {
         List<Notification> unreadNotifications = notificationService.getUnreadNotificationsForUser();
         return ResponseEntity.ok(unreadNotifications);
     }
 
-    @Operation(summary = "Mark a specific notification as read", security = @SecurityRequirement(name = "bearerAuth")) // CORRECTED
+    @Operation(summary = "Mark a specific notification as read", security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{id}/read")
     public ResponseEntity<Notification> markNotificationAsRead(@PathVariable String id) {
         Notification updatedNotification = notificationService.markNotificationAsRead(id);
         return ResponseEntity.ok(updatedNotification);
     }
 
-    @Operation(summary = "Delete a specific notification", security = @SecurityRequirement(name = "bearerAuth")) // CORRECTED
+    @Operation(summary = "Delete a specific notification", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNotification(@PathVariable String id) {
         notificationService.deleteNotification(id);
