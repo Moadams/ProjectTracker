@@ -17,6 +17,90 @@ The BuildMaster Project Tracker API is a robust backend solution designed to hel
 - **API Versioning**: Implemented with URI path versioning (`/api/v1/`)
 - **API Documentation**: Self-documenting API using Swagger/OpenAPI for easy exploration and testing
 
+## Security Features and Usage
+
+The Project Tracker API is now secured with Spring Security, JWT authentication, and OAuth2/OpenID Connect login.
+
+### 1. User Roles
+
+The system defines the following roles:
+* `ROLE_ADMIN`: Full access, manages users, views audit logs.
+* `ROLE_MANAGER`: Can create/manage projects, assign tasks.
+* `ROLE_DEVELOPER`: Can view all projects and tasks, but only update tasks assigned to them. Default role for local registrations.
+* `ROLE_CONTRACTOR`: Read-only access to project summaries. Default role for OAuth2 logins.
+
+### 2. Local User Authentication (Email/Password)
+
+**a. User Registration:**
+* **Endpoint:** `POST /auth/register`
+* **Purpose:** Create a new local user account.
+* **Request Body:**
+    ```json
+    {
+        "email": "newuser@example.com",
+        "password": "securepassword123"
+    }
+    ```
+* **Default Role:** New local users are assigned `ROLE_DEVELOPER` by default.
+
+**b. User Login:**
+* **Endpoint:** `POST /auth/login`
+* **Purpose:** Authenticate a local user and receive a JWT token.
+* **Request Body:**
+    ```json
+    {
+        "email": "newuser@example.com",
+        "password": "securepassword123"
+    }
+    ```
+* **Response:**
+    ```json
+    {
+        "accessToken": "eyJhbGciOiJIUzI1Ni...",
+        "tokenType": "Bearer",
+        "refreshToken": "eyuuasdJosd....",
+        "expiresIn": 900, // Token validity in seconds (e.g., 15 minutes)
+        "role": "ROLE_DEVELOPER"
+    }
+    ```
+  Store this `accessToken`.
+
+### 3. API Access with JWT
+
+For all protected endpoints (most endpoints under `/api/v1/`), you must include the JWT in the `Authorization` header:
+
+* **Header:** `Authorization`
+* **Value:** `Bearer <your_jwt_token>` (e.g., `Bearer eyJhbGciOiJIUzI1Ni...`)
+
+### 4. OAuth2 Login Integration (Google / GitHub)
+
+* **Initiate Login:**
+   * **Google:** Access `http://localhost:8080/oauth2/authorization/google`
+   * **GitHub:** Access `http://localhost:8080/oauth2/authorization/github`
+* **Flow:**
+   1.  Your browser will redirect to the respective OAuth2 provider's login/consent page.
+   2.  After successful authentication and consent, the provider will redirect back to your application's callback URL (e.g., `http://localhost:8080/login/oauth2/code/google`).
+   3.  Your application will handle this callback, provision/update the user locally (assigning `ROLE_CONTRACTOR` by default for new OAuth2 users), and then respond with a JWT in the JSON body (similar to the local login response).
+* **Important Configuration:**
+   * Ensure `spring.security.oauth2.client.registration.google.client-id`, `client-secret` (and similarly for GitHub) are correctly set in `application.properties`.
+   * The `redirect-uri` in `application.properties` MUST match the authorized redirect URI configured in your Google Cloud Console / GitHub OAuth Apps settings.
+
+### 5. Role-Based Access Control Examples
+
+* `POST /api/v1/projects`: Requires `ROLE_ADMIN` or `ROLE_MANAGER`.
+* `PUT /api/v1/tasks/{id}`: Requires `ROLE_ADMIN` or `ROLE_MANAGER`, OR the authenticated `ROLE_DEVELOPER` must be assigned to the task.
+* `DELETE /api/v1/users/{id}`: Requires `ROLE_ADMIN`.
+* `GET /api/v1/logs`: Requires `ROLE_ADMIN`.
+* `GET /api/v1/projects/{id}/summary`: Accessible to all authenticated users (including `ROLE_CONTRACTOR`).
+
+### 6. Swagger UI Security
+
+* Access Swagger UI at `http://localhost:8080/swagger-ui.html`.
+* Only accessible to ADMIN users.
+* Click the "Authorize" button (global security definitions are present).
+* In the dialog, enter your JWT token (prefixed with `Bearer `) obtained from `/auth/login` or OAuth2 callback. This will allow you to test protected endpoints directly from Swagger UI.
+
+
 ## System Requirements
 
 To run this application locally, you will need:
