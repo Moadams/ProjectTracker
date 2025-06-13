@@ -14,7 +14,9 @@ import com.buildmaster.projecttracker.model.Task;
 import com.buildmaster.projecttracker.repository.DeveloperRepository;
 import com.buildmaster.projecttracker.repository.ProjectRepository;
 import com.buildmaster.projecttracker.repository.TaskRepository;
+import com.buildmaster.projecttracker.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final AuditLogService auditLogService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final NotificationService notificationService;
 
 
 
@@ -42,13 +45,23 @@ public class TaskService {
         return CustomApiResponse.success("Tasks List", response);
     }
 
+    @CacheEvict(value = "allProjects", allEntries = true)
     @Transactional
     public CustomApiResponse<TaskDTO.TaskResponse> createTask(TaskDTO.TaskRequest request) {
         Task task = taskMapper.toTaskEntity(request);
         Task savedTask = taskRepository.save(task);
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(savedTask);
         auditLogService.logAudit(ActionType.CREATE, EntityType.TASK, savedTask.getId().toString(), "system", response);
+
+
         if(savedTask.getAssignedDeveloper() != null) {
+            notificationService.createNotification(
+                    savedTask.getAssignedDeveloper().getEmail(),
+                    "You have been assigned to task: " + savedTask.getTitle() ,
+                    "TASK_ASSIGNMENT",
+                    savedTask.getId(),
+                    Task.class.getSimpleName()
+            );
             applicationEventPublisher.publishEvent(new TaskAssignedEvent(this, savedTask, savedTask.getAssignedDeveloper()));
         }
         return CustomApiResponse.success("Task created", response);
@@ -110,6 +123,15 @@ public class TaskService {
 
         TaskDTO.TaskResponse response = taskMapper.toTaskDTO(updatedTask);
         auditLogService.logAudit(ActionType.UPDATE, EntityType.TASK, updatedTask.getId().toString(), "system", response);
+        if(updatedTask.getAssignedDeveloper() != null){
+                notificationService.createNotification(
+                        updatedTask.getAssignedDeveloper().getEmail(),
+                        "Status of task '" + updatedTask.getTitle() + " in project ",
+                        "TASK_STATUS_UPDATE",
+                        updatedTask.getId(),
+                        Task.class.getSimpleName()
+                );
+        }
         return CustomApiResponse.success("Task status updated", response);
     }
 
