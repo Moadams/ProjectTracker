@@ -89,7 +89,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "400", description = "Invalid task data"),
                     @ApiResponse(responseCode = "404", description = "Task, Project, or Developer not found")
             })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @taskSecurity.isTaskOwner(#id)")
+    @PreAuthorize("@taskSecurity.isTaskOwner(#id)")
     @PutMapping("/{id}")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> updateTask(@Valid @PathVariable Long id, @Valid @RequestBody TaskDTO.TaskUpdateRequest taskRequest) {
         CustomApiResponse<TaskDTO.TaskResponse> updatedTask = taskService.updateTask(id, taskRequest);
@@ -102,7 +102,7 @@ public class TaskController {
                     @ApiResponse(responseCode = "400", description = "Invalid status data"),
                     @ApiResponse(responseCode = "404", description = "Task not found")
             })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @taskSecurity.isTaskOwner(#id)")
+    @PreAuthorize("@taskSecurity.isTaskOwner(#id)")
     @PatchMapping("/{id}/status")
     public ResponseEntity<CustomApiResponse<TaskDTO.TaskResponse>> updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskDTO.TaskUpdateStatusRequest statusRequest) {
         CustomApiResponse<TaskDTO.TaskResponse> updatedTask = taskService.updateTaskStatus(id, statusRequest);
