@@ -40,8 +40,8 @@ public class ProjectController {
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects"))
     @PreAuthorize("isAuthenticated()")
     @GetMapping
-    public ResponseEntity<CustomApiResponse<Page<ProjectDTO.ProjectResponse>>> getAllProjects(Pageable pageable) {
-        CustomApiResponse<Page<ProjectDTO.ProjectResponse>> projects = projectService.getAllProjects(pageable);
+    public ResponseEntity<CustomApiResponse<Page<ProjectDTO.ProjectSummaryResponse>>> getAllProjects(Pageable pageable) {
+        CustomApiResponse<Page<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getAllProjects(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(projects);
     }
 

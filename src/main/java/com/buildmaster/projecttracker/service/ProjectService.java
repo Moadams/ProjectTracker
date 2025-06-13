@@ -36,7 +36,7 @@ public class ProjectService {
 
 
     @Transactional
-    @CacheEvict(value = "projects", allEntries = true)
+    @CacheEvict(value = "allProjects", allEntries = true)
     public CustomApiResponse<ProjectDTO.ProjectResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
         log.info("Creating new project: {}", projectRequest);
         Project project = projectMapper.toProjectEntity(projectRequest);
@@ -48,9 +48,9 @@ public class ProjectService {
 
     @Transactional
     @Cacheable(value = "allProjects")
-    public CustomApiResponse<Page<ProjectDTO.ProjectResponse>> getAllProjects(Pageable pageable) {
-        Page<ProjectDTO.ProjectResponse> response =  projectRepository.findAll(pageable)
-                .map(projectMapper::toProjectResponse);
+    public CustomApiResponse<Page<ProjectDTO.ProjectSummaryResponse>> getAllProjects(Pageable pageable) {
+        Page<ProjectDTO.ProjectSummaryResponse> response =  projectRepository.findAll(pageable)
+                .map(projectMapper::toProjectSummaryResponse);
         return CustomApiResponse.success("Project list", response);
 
     }
