@@ -1,11 +1,18 @@
 package com.buildmaster.projecttracker.exception;
 
 import com.buildmaster.projecttracker.dto.CustomApiResponse;
+import com.buildmaster.projecttracker.enums.ActionType;
+import com.buildmaster.projecttracker.enums.EntityType;
+import com.buildmaster.projecttracker.service.AuditLogService;
 import io.jsonwebtoken.ExpiredJwtException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,7 +26,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final AuditLogService auditLogService;
+
+    private String getCurrentUserEmailForAudit() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetails) {
+            return ((UserDetails) authentication.getPrincipal()).getUsername();
+        }
+        return "anonymous/unauthenticated";
+    }
+
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<CustomApiResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
@@ -40,12 +59,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<CustomApiResponse> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
         CustomApiResponse errorDetails = new CustomApiResponse(false, "Access Denied: You do not have permission to access this resource.", request.getDescription(false),LocalDateTime.now());
+        String userEmail = getCurrentUserEmailForAudit();
+        auditLogService.logAudit(ActionType.UNAUTHORIZED_ACCESS, EntityType.USER, null,
+                "Access denied for user: " + userEmail + " to " + request.getDescription(false) + ". Reason: " + ex.getMessage(),
+                userEmail);
+
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<CustomApiResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         CustomApiResponse errorDetails = new CustomApiResponse(false, "Authentication Failed: " + ex.getMessage(), request.getDescription(false), LocalDateTime.now());
+        String userEmail = getCurrentUserEmailForAudit();
+        auditLogService.logAudit(ActionType.LOGIN_FAILURE, EntityType.USER, null,
+                "Authentication failed for user " + userEmail + " to " + request.getDescription(false) + ". Reason: " + ex.getMessage(),
+                userEmail);
         return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
     }
 
