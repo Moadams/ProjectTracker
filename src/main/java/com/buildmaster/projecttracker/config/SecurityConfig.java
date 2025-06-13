@@ -1,5 +1,6 @@
 package com.buildmaster.projecttracker.config;
 
+import com.buildmaster.projecttracker.security.CustomAuthenticationEntryPoint;
 import com.buildmaster.projecttracker.security.JwtAuthenticationFilter;
 import com.buildmaster.projecttracker.service.CustomOAuth2UserService;
 import com.buildmaster.projecttracker.util.CustomAuthenticationSuccessHandler;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Value("${spring.h2.console.enabled}")
     private boolean h2ConsoleEnabled;
@@ -47,6 +49,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(
                             "/auth/**",
