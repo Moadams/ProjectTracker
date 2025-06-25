@@ -1,5 +1,6 @@
 package com.buildmaster.projecttracker.service;
 
+import com.buildmaster.projecttracker.audit.Auditable;
 import com.buildmaster.projecttracker.dto.CustomApiResponse;
 import com.buildmaster.projecttracker.dto.ProjectDTO;
 import com.buildmaster.projecttracker.enums.ActionType;
@@ -34,7 +35,7 @@ public class ProjectService {
     private final AuditLogService auditLogService;
     private final TaskRepository taskRepository;
 
-
+    @Auditable(action = ActionType.CREATE, message = "Project '{0}' created.", entityType = EntityType.PROJECT)
     @Transactional
     @CacheEvict(value = "allProjects", allEntries = true)
     public CustomApiResponse<ProjectDTO.ProjectResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
@@ -42,7 +43,6 @@ public class ProjectService {
         Project project = projectMapper.toProjectEntity(projectRequest);
         Project savedProject = projectRepository.save(project);
         ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(savedProject);
-        auditLogService.logAudit(ActionType.CREATE, EntityType.PROJECT, savedProject.getId().toString(), "system", savedProject);
         return CustomApiResponse.success("Project created", response);
     }
 
@@ -85,16 +85,6 @@ public class ProjectService {
     })
     public CustomApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findWithTasksById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
-
-        System.out.println("Task count: " + existingProject.getTasks().size());
-
-        List<Task> projectTasks = taskRepository.findByProjectId(id);
-
-        if (projectTasks != null && !projectTasks.isEmpty()) {
-            projectTasks.forEach(task -> task.setProject(null));
-            projectTasks.forEach(task -> taskRepository.deleteById(task.getId()));
-            existingProject.getTasks().clear();
-        }
 
         projectRepository.delete(existingProject);
         auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
