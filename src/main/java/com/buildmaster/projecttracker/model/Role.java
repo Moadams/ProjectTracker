@@ -3,17 +3,15 @@ package com.buildmaster.projecttracker.model;
 
 import com.buildmaster.projecttracker.enums.RoleName;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "roles")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Role {
