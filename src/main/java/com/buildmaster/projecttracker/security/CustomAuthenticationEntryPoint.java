@@ -1,5 +1,6 @@
 package com.buildmaster.projecttracker.security;
 
+import com.buildmaster.projecttracker.dto.ApiErrorResponse;
 import com.buildmaster.projecttracker.dto.CustomApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -38,10 +39,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-
-        CustomApiResponse errorDetails = new CustomApiResponse(
-                false,
-                "Authentication Required: Access token is missing or invalid.",
+        ApiErrorResponse errorDetails = new ApiErrorResponse(
+                "Authentication Required: Access token is missing or invalid",
                 request.getRequestURI(),
                 LocalDateTime.now()
         );
