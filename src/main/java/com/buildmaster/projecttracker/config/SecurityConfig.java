@@ -7,16 +7,13 @@ import com.buildmaster.projecttracker.util.CustomAuthenticationSuccessHandler;
 import com.buildmaster.projecttracker.util.HttpCookieOAuth2AuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -40,8 +37,6 @@ public class SecurityConfig {
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Value("${spring.h2.console.enabled}")
-    private boolean h2ConsoleEnabled;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,20 +59,12 @@ public class SecurityConfig {
                             "/webjars/**"
                     ).hasRole("ADMIN");
 
-                    if (h2ConsoleEnabled) {
-                        authorize.requestMatchers("/h2-console/**").permitAll();
-                        try {
-                            http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
 
                     authorize.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
-
                     authorize.requestMatchers("/api/v1/projects/**").authenticated();
                     authorize.requestMatchers("/api/v1/tasks/**").hasAnyRole("ADMIN","DEVELOPER", "MANAGER");
                     authorize.requestMatchers("/api/v1/developers/**").hasAnyRole("ADMIN","DEVELOPER","MANAGER");
+                    authorize.requestMatchers("/api/v1/logs").hasAnyRole("ADMIN");
                     authorize.requestMatchers("/api/v1/notifications/**").authenticated();
                 })
                 .authenticationProvider(authenticationProvider)
