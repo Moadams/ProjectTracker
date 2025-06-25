@@ -47,4 +47,16 @@ public class SecurityUtil {
 
         return assignedDeveloperEmail.equals(currentUserEmail);
     }
+
+    public String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        }
+        return null;
+    }
 }
