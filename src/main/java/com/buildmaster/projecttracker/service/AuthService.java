@@ -13,7 +13,9 @@ import com.buildmaster.projecttracker.repository.RoleRepository;
 import com.buildmaster.projecttracker.repository.UserRepository;
 import com.buildmaster.projecttracker.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,11 +24,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +44,8 @@ public class AuthService {
     private final AuditLogService auditLogService;
     private final JwtService jwtService;
 
+    private volatile Role cachedDeveloperRole;
+
     public AuthDTO.JwtResponse loginUser(AuthDTO.LoginUserRequest loginRequest){
         String userEmail = loginRequest.email();
 
@@ -49,55 +55,116 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        String accessToken = jwtService.generateToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
+        CompletableFuture<String> accessTokenFuture = CompletableFuture.supplyAsync(() ->
+                jwtService.generateToken(userDetails));
+        CompletableFuture<String> refreshTokenFuture = CompletableFuture.supplyAsync(() ->
+                jwtService.generateRefreshToken(userDetails));
+
         String role = userDetails.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
                 .orElse("ROLE_USER");
 
-        AuthDTO.JwtResponse response = new AuthDTO.JwtResponse(
-                accessToken,"Bearer", refreshToken, jwtService.getJwtExpiration() / 1000, role
-        );
+        try{
+            String accessToken = accessTokenFuture.get();
+            String refreshToken = refreshTokenFuture.get();
 
-        auditLogService.logAudit(ActionType.LOGIN_SUCCESS, EntityType.USER, userEmail,
-                "Successful login for user: " + userEmail, userEmail);
+            AuthDTO.JwtResponse response = new AuthDTO.JwtResponse(
+                    accessToken,"Bearer", refreshToken, jwtService.getJwtExpiration() / 1000, role
+            );
 
-        return response;
+            logAuditAsync(ActionType.LOGIN_SUCCESS, EntityType.USER, userEmail,
+                    "Successful login for user: " + userEmail, userEmail);
+
+            return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating tokens",e);
+        }
+
+
+
     }
 
-    @Transactional
+    @Transactional(timeout = 10)
     public CustomApiResponse<?> registerUser(AuthDTO.RegisterUserRequest requestData) {
         if (userRepository.existsByEmail(requestData.email())) {
             return CustomApiResponse.error("Email already exists");
         }
 
-        Role developerRole = roleRepository.findByName(RoleName.ROLE_DEVELOPER)
-                .orElseGet(() -> roleRepository.save(Role.builder().name(RoleName.ROLE_DEVELOPER).build()));
+        Role developerRole =getCachedDeveloperRole();
+        String encodedPassword = passwordEncoder.encode(requestData.password());
+        LocalDateTime now = LocalDateTime.now();
 
         User user = User.builder()
                 .email(requestData.email())
-                .password(passwordEncoder.encode(requestData.password()))
+                .password(encodedPassword)
                 .roles(Collections.singleton(developerRole))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
         userRepository.save(user);
 
-        if (user.getRoles().contains(developerRole)) {
-            if (developerRepository.findByEmail(user.getEmail()).isEmpty()) {
-                Developer developer = Developer.builder()
-                        .name(user.getEmail().split("@")[0])
-                        .email(user.getEmail())
-                        .build();
-                developerRepository.save(developer);
+        final String userEmail = user.getEmail();
+        final String userId = user.getId().toString();
+
+        // Return success response immediately, then handle async operations
+        CustomApiResponse<?> response = CustomApiResponse.success("User created successfully", null);
+
+        // Execute async operations AFTER transaction completes
+        CompletableFuture.runAsync(() -> {
+            createDeveloperProfileAsync(userEmail);
+            logAuditAsync(ActionType.CREATE, EntityType.USER, userId,
+                    "New user '" + userEmail + "' registered with ROLE_DEVELOPER.", userEmail);
+        });
+
+        return response;
+    }
+
+    @Cacheable("roles")
+    public Role getCachedDeveloperRole(){
+        if(cachedDeveloperRole == null){
+            synchronized (this){
+                if(cachedDeveloperRole == null){
+                    cachedDeveloperRole = roleRepository.findByName(RoleName.ROLE_DEVELOPER).orElseGet(()->roleRepository.save(
+                            Role.builder().name(RoleName.ROLE_DEVELOPER).build()
+                    ));
+                }
             }
         }
+        return cachedDeveloperRole;
+    }
 
-        auditLogService.logAudit(ActionType.CREATE, EntityType.USER, user.getId().toString(),
-                "New user '" + user.getEmail() + "' registered with ROLE_DEVELOPER.", user.getEmail());
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, timeout = 30)
+    protected CompletableFuture<Void> createDeveloperProfileAsync(String email){
+        return CompletableFuture.runAsync(() -> {
+            try{
+                if(developerRepository.findByEmail(email).isEmpty()){
+                    Developer developer = Developer.builder()
+                            .name(email.split("@")[0])
+                            .email(email)
+                            .build();
+                    developerRepository.save(developer);
+                }
+            }catch (Exception e){
+                System.out.println("Failed to create developer profile for: " + email + " - " + e.getMessage());
+            }
+        });
+    }
 
-        return CustomApiResponse.success("User created successfully", null);
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, timeout = 15)
+    protected CompletableFuture<Void> logAuditAsync(ActionType actionType, EntityType entityType,
+                                                  String entityId, String description, String performedBy) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                auditLogService.logAudit(actionType, entityType, entityId, description, performedBy);
+            } catch (Exception e) {
+                // Log error but don't fail the main operation
+                System.err.println("Failed to log audit: " + e.getMessage());
+            }
+        });
     }
 
     public AuthDTO.UserProfileResponse getUserProfile() {
