@@ -52,8 +52,8 @@ public class ProjectController {
             })
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectResponse>> createProject(@Valid @RequestBody ProjectDTO.ProjectRequest projectRequest) {
-        CustomApiResponse<ProjectDTO.ProjectResponse> createdProject = projectService.createProject(projectRequest);
+    public ResponseEntity<CustomApiResponse<ProjectDTO.ProjectSummaryResponse>> createProject(@Valid @RequestBody ProjectDTO.ProjectRequest projectRequest) {
+        CustomApiResponse<ProjectDTO.ProjectSummaryResponse> createdProject = projectService.createProject(projectRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
     }
 

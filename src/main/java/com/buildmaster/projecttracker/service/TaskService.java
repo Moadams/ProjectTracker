@@ -17,6 +17,8 @@ import com.buildmaster.projecttracker.repository.TaskRepository;
 import com.buildmaster.projecttracker.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,13 +41,15 @@ public class TaskService {
     private final NotificationService notificationService;
 
 
-
+    @Cacheable(
+            value = "allTasks"
+    )
     public CustomApiResponse<Page<TaskDTO.TaskResponse>> getAllTasks(Pageable pageable) {
         Page<TaskDTO.TaskResponse> response = taskRepository.findAll(pageable).map(taskMapper::toTaskDTO);
         return CustomApiResponse.success("Tasks List", response);
     }
 
-    @CacheEvict(value = "allProjects", allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectsWithoutTasks", "allTasks","topDevelopers"}, allEntries = true)
     @Transactional
     public CustomApiResponse<TaskDTO.TaskResponse> createTask(TaskDTO.TaskRequest request) {
         Task task = taskMapper.toTaskEntity(request);
@@ -67,6 +71,7 @@ public class TaskService {
         return CustomApiResponse.success("Task created", response);
     }
 
+    @Cacheable(value = "tasks", key="#id")
     public CustomApiResponse<TaskDTO.TaskResponse> getTaskById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
@@ -89,10 +94,13 @@ public class TaskService {
         return CustomApiResponse.success("Developer tasks", response);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", key = "#id"),
+            @CacheEvict(value = {"allTasks","overdueTasks", "taskCounts"}, allEntries = true)
+    })
     public CustomApiResponse<TaskDTO.TaskResponse> updateTask(Long id, TaskDTO.TaskUpdateRequest taskRequest) {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-
 
         if(taskRequest.title() != null) existingTask.setTitle(taskRequest.title());
         if(taskRequest.description() != null) existingTask.setDescription(taskRequest.description());
@@ -114,6 +122,10 @@ public class TaskService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value="tasks", key="#id"),
+            @CacheEvict(value = {"allTasks", "taskCounts", "overdueTasks"}, allEntries = true)
+    })
     public CustomApiResponse<TaskDTO.TaskResponse> updateTaskStatus(Long id, TaskDTO.TaskUpdateStatusRequest statusRequest) {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
@@ -136,6 +148,10 @@ public class TaskService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value="tasks", key="#id"),
+            @CacheEvict(value = {"allTasks","taskCounts","overdueTasks"}, allEntries = true)
+    })
     public CustomApiResponse<Void> deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
@@ -144,6 +160,7 @@ public class TaskService {
         return CustomApiResponse.success("Developer Deleted", null);
     }
 
+    @Cacheable(value="overdueTasks")
     public CustomApiResponse<List<TaskDTO.TaskSummaryResponse>> getOverdueTasks() {
         List<TaskDTO.TaskSummaryResponse> response = taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), TaskStatus.COMPLETED).stream()
                 .map(taskMapper::toTaskSummaryResponse)
@@ -152,6 +169,7 @@ public class TaskService {
         return CustomApiResponse.success("Tasks", response);
     }
 
+    @Cacheable(value="taskCounts")
     public CustomApiResponse<List<Object[]>> getTaskCountsByStatus() {
         List<Object[]> response = taskRepository.countTasksByStatus();
         return CustomApiResponse.success("Tasks", response);

@@ -33,16 +33,14 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
     private final AuditLogService auditLogService;
-    private final TaskRepository taskRepository;
 
     @Auditable(action = ActionType.CREATE, message = "Project '{0}' created.", entityType = EntityType.PROJECT)
     @Transactional
     @CacheEvict(value = "allProjects", allEntries = true)
-    public CustomApiResponse<ProjectDTO.ProjectResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
-        log.info("Creating new project: {}", projectRequest);
+    public CustomApiResponse<ProjectDTO.ProjectSummaryResponse> createProject(ProjectDTO.ProjectRequest projectRequest) {
         Project project = projectMapper.toProjectEntity(projectRequest);
         Project savedProject = projectRepository.save(project);
-        ProjectDTO.ProjectResponse response = projectMapper.toProjectResponse(savedProject);
+        ProjectDTO.ProjectSummaryResponse response = projectMapper.toProjectSummaryResponse(savedProject);
         return CustomApiResponse.success("Project created", response);
     }
 
@@ -52,7 +50,6 @@ public class ProjectService {
         Page<ProjectDTO.ProjectSummaryResponse> response =  projectRepository.findAll(pageable)
                 .map(projectMapper::toProjectSummaryResponse);
         return CustomApiResponse.success("Project list", response);
-
     }
 
 
@@ -66,6 +63,7 @@ public class ProjectService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "projects", key = "#id"),
+            @CacheEvict(value = "overdueProjects"),
             @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true)
     })
     public CustomApiResponse<ProjectDTO.ProjectResponse> updateProject(Long id, ProjectDTO.ProjectUpdateRequest projectRequest) {
@@ -78,23 +76,20 @@ public class ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value="projects", key="#id")
     @Caching(evict = {
             @CacheEvict(value = "projects", key = "#id"),
-            @CacheEvict(value = {"allProjects", "projectsWithoutTasks"}, allEntries = true)
+            @CacheEvict(value = {"allProjects", "overdueProjects", "projectsWithoutTasks"}, allEntries = true)
     })
     public CustomApiResponse<Void> deleteProject(Long id) {
         Project existingProject = projectRepository.findWithTasksById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
-
         projectRepository.delete(existingProject);
         auditLogService.logAudit(ActionType.DELETE, EntityType.PROJECT, id.toString(), "system", null);
         return CustomApiResponse.success("Project deleted", null);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "overdueProjects")
     public CustomApiResponse<List<ProjectDTO.ProjectResponse>> getOverdueProjects() {
-        log.info("Fetching overdue projects");
-
         List<Project> overdueProjects = projectRepository.findOverdueProjects(
                 LocalDate.now(), ProjectStatus.ACTIVE);
 

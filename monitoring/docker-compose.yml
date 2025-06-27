@@ -34,24 +34,3 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
-
-# Your Project Tracker application (optional: if you want to run it in the same Docker Compose)
-# If you run your Spring Boot app directly on the host, you don't need this block here.
-# project-tracker-app:
-#   build:
-#     context: ../ # Path to your Spring Boot project root
-#     dockerfile: Dockerfile
-#   container_name: project-tracker-app
-#   ports:
-#     - "8080:8080" # Expose internal Spring Boot port
-#   environment:
-#     # Ensure database details are correctly set for Docker network
-#     SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/buildmaster
-#     SPRING_DATASOURCE_USERNAME: postgres
-#     SPRING_DATASOURCE_PASSWORD: 5llsmu1
-#     SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/auditlogsdb
-#   networks:
-#     - monitor-net # Connect to the same network as Prometheus/Grafana
-#   depends_on:
-#     - postgresql # Assuming you have a postgresql service defined in *this* docker-compose.yml
-#     - mongodb # Assuming you have a mongodb service defined in *this* docker-compose.yml

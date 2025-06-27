@@ -11,6 +11,7 @@ import com.buildmaster.projecttracker.repository.DeveloperRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,13 +28,14 @@ public class DeveloperService {
     private final DeveloperMapper developerMapper;
     private final AuditLogService auditLogService;
 
-    @Cacheable(value="projects")
+    @Cacheable(value="allDevelopers")
     public CustomApiResponse<Page<DeveloperDTO.DeveloperSummaryResponse>> getAllDevelopers(Pageable pageable) {
         Page<DeveloperDTO.DeveloperSummaryResponse> response = developerRepository.findAll(pageable).map(developerMapper::toDeveloperSummaryResponse);
         return CustomApiResponse.success("Developers List", response);
     }
 
     @Transactional
+    @CacheEvict(value = "allDevelopers")
     public CustomApiResponse<DeveloperDTO.DeveloperResponse> createDeveloper(DeveloperDTO.DeveloperRequest request) {
         Developer developer = developerMapper.toDeveloperEntity(request);
         Developer savedDeveloper = developerRepository.save(developer);
@@ -51,7 +53,12 @@ public class DeveloperService {
 
 
     @Transactional
-    @CacheEvict(value="developers", key="#id")
+    @Caching(
+            evict = {
+                @CacheEvict(value="developers", key="#id"),
+                @CacheEvict(value="allDevelopers")
+            }
+    )
     public CustomApiResponse<DeveloperDTO.DeveloperResponse> updateDeveloper(Long id, DeveloperDTO.DeveloperRequest request) {
         Developer developer = developerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Developer not found with id: " + id));
         developerMapper.updateEntity(developer, request);
@@ -62,6 +69,12 @@ public class DeveloperService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value="developers", key="#id"),
+                    @CacheEvict(value={"allDevelopers","topDevelopers"} , allEntries = true)
+            }
+    )
     public CustomApiResponse<Void> deleteDeveloper(Long id) {
         Developer developer = developerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Developer not found with id: " + id));
         developerRepository.delete(developer);
@@ -69,7 +82,7 @@ public class DeveloperService {
         return CustomApiResponse.success("Developer deleted", null);
     }
 
-    @Cacheable(value = "developers")
+    @Cacheable(value = "topDevelopers")
     public CustomApiResponse<List<DeveloperDTO.DeveloperSummaryResponse>> getTop5DevelopersWithMostTasks() {
         List<DeveloperDTO.DeveloperSummaryResponse> developers =  developerRepository.findTop5DevelopersWithMostTasks().stream()
                 .map(obj -> new DeveloperDTO.DeveloperSummaryResponse(
