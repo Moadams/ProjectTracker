@@ -108,10 +108,10 @@ public class AuthService {
         final String userEmail = user.getEmail();
         final String userId = user.getId().toString();
 
-        // Return success response immediately, then handle async operations
+
         CustomApiResponse<?> response = CustomApiResponse.success("User created successfully", null);
 
-        // Execute async operations AFTER transaction completes
+
         CompletableFuture.runAsync(() -> {
             createDeveloperProfileAsync(userEmail);
             logAuditAsync(ActionType.CREATE, EntityType.USER, userId,
@@ -161,7 +161,7 @@ public class AuthService {
             try {
                 auditLogService.logAudit(actionType, entityType, entityId, description, performedBy);
             } catch (Exception e) {
-                // Log error but don't fail the main operation
+
                 System.err.println("Failed to log audit: " + e.getMessage());
             }
         });
