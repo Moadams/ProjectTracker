@@ -61,11 +61,10 @@ public class SecurityConfig {
 
 
                     authorize.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
-                    authorize.requestMatchers("/api/v1/projects/**").authenticated();
+                    authorize.requestMatchers("/api/v1/projects/**").permitAll();
                     authorize.requestMatchers("/api/v1/tasks/**").hasAnyRole("ADMIN","DEVELOPER", "MANAGER");
                     authorize.requestMatchers("/api/v1/developers/**").hasAnyRole("ADMIN","DEVELOPER","MANAGER");
                     authorize.requestMatchers("/api/v1/logs").hasAnyRole("ADMIN");
-                    authorize.requestMatchers("/api/v1/monitor/**").permitAll();
                     authorize.requestMatchers("/actuator/**").permitAll();
                     authorize.requestMatchers("/api/v1/notifications/**").authenticated();
                 })

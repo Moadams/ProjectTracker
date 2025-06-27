@@ -38,7 +38,7 @@ public class ProjectController {
                     @Parameter(name = "sort", description = "Sort order (field,asc/desc)", example = "name,asc")
             },
             responses = @ApiResponse(responseCode = "200", description = "Successfully retrieved list of projects"))
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<CustomApiResponse<Page<ProjectDTO.ProjectSummaryResponse>>> getAllProjects(Pageable pageable) {
         CustomApiResponse<Page<ProjectDTO.ProjectSummaryResponse>> projects = projectService.getAllProjects(pageable);
