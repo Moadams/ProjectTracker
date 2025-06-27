@@ -32,7 +32,6 @@ public class SecurityUtil {
         if (principal instanceof UserDetails) {
             currentUserEmail = ((UserDetails) principal).getUsername();
         } else {
-
             return false;
         }
 
@@ -42,6 +41,9 @@ public class SecurityUtil {
         }
 
         Task task = taskOptional.get();
+        if(task.getAssignedDeveloper() == null){
+            return false;
+        }
         String assignedDeveloperEmail = task.getAssignedDeveloper().getEmail();
 
 
