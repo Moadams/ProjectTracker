@@ -15,8 +15,10 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("projects",
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager(
+                "projects",
                 "allProjects",
+                "overdueProjects",
                 "projectsWithoutTasks",
 
                 "developers",
