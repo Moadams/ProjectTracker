@@ -1,0 +1,57 @@
+version: '3.8'
+
+networks:
+  monitor-net:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.44.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --web.enable-remote-write-receiver --storage.tsdb.retention.time=15d
+    networks:
+      - monitor-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitor-net
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+# Your Project Tracker application (optional: if you want to run it in the same Docker Compose)
+# If you run your Spring Boot app directly on the host, you don't need this block here.
+# project-tracker-app:
+#   build:
+#     context: ../ # Path to your Spring Boot project root
+#     dockerfile: Dockerfile
+#   container_name: project-tracker-app
+#   ports:
+#     - "8080:8080" # Expose internal Spring Boot port
+#   environment:
+#     # Ensure database details are correctly set for Docker network
+#     SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/buildmaster
+#     SPRING_DATASOURCE_USERNAME: postgres
+#     SPRING_DATASOURCE_PASSWORD: 5llsmu1
+#     SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/auditlogsdb
+#   networks:
+#     - monitor-net # Connect to the same network as Prometheus/Grafana
+#   depends_on:
+#     - postgresql # Assuming you have a postgresql service defined in *this* docker-compose.yml
+#     - mongodb # Assuming you have a mongodb service defined in *this* docker-compose.yml

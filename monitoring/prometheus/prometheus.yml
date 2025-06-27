@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# A scrape configuration for Prometheus itself
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Configuration for scraping your Spring Boot application
+  - job_name: 'project-tracker-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080'] # If running Spring Boot app on host, from Docker's perspective
+        # If your Spring Boot app is also in Docker Compose with Prometheus/Grafana:
+        # targets: ['project-tracker-app:8080'] # Use the service name and internal port
+
+# Example: If running Spring Boot app directly on host machine, and exposing port 5000
+# host.docker.internal is a special DNS name for Docker containers to resolve to the host machine's IP.
+# If your Spring Boot app runs on 8080, change 5000 to 8080.
